@@ -10,9 +10,108 @@ description = "Since the stable and incubation helm chart repositories are depre
 showFullContent = false
 +++
 
+Since the stable and incubation helm chart repositories are deprecated, charts are published in a multitude of locations. Unfortunately not all these locations are as stable as you would expect them to be. In this post we will setup Chartmuseum on a Kubernetes cluster, backed by AWS S3 and use it and Github Actions to publish our own charts and mirror the repositoreis we need.
 
-dkdkdkddk
+## Using Pulumi to bootstrap our infrastructure
 
-```bash
-ldldldl
+[Pulumi](https://www.pulumi.com) is a tool that allows us to leverage familiar programming languages to define our infrastructure as code. In this post we will be using the Typescript version of Pulumi together with a free account.
+
+Let's install Pulumi using [Homebrew](https://brew.sh) since I use MacOS. You can use Pulumi on any operating system and [the installation instructions can be found in the documentation](https://www.pulumi.com/docs/get-started/install/). FYI, a lot of the Pulumi code samples is copied from the Pulumi documentation, the go-to source for anything you want to do with Pulumi.
+
+```sh
+brew install pulumi
 ```
+
+You will also need a free account from the [Pulumi website](https://www.pulumi.com). This account is used to store the state of your infrastructure. You can also use your own backend if you do not feel comfortable using the Pulumi backend, the configuration of this can be found in [the docs](https://www.pulumi.com/docs/guides/self-hosted/).
+
+Using this account, you can log in on your computer
+
+```shell
+pulumi login
+```
+
+In your account settings, under Access Tokens, you need to create a new token. Save the token for the future steps. It looks like this (obviously this is not my token 🤦):
+
+```text
+pul-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+This handled, we will create the Pulumi stack for this tutorial.
+
+```shell
+mkdir chartmuseum-tutorial && cd chartmuseum-tutorial
+pulumi new aws-typescript
+```
+
+The Pulumi CLI will ask you some questions to complete the setup
+
+- Enter in a Pulumi project name, and description to detail what this Pulumi program does
+- Enter in a name for the Pulumi stack, which is an instance of our Pulumi program, and is used to distinguish amongst different development phases and environments of your work streams.
+- Your preferred AWS zone
+
+## Setting up the Kubernetes Cluster on EKS
+
+Let's start off by creating the cluster. First we need to add some more dependencies.
+
+```shell
+npm install --save @pulumi/eks @pulumi/kubernetes
+```
+
+Open the existing file index.ts, and replace the contents with the following:
+
+```typescript
+import * as pulumi from "@pulumi/pulumi";
+import * as awsx from "@pulumi/awsx";
+import * as eks from "@pulumi/eks";
+import * as k8s from "@pulumi/kubernetes";
+
+const name = "chartmuseum";
+
+// Create an EKS cluster with non-default configuration
+const vpc = new awsx.ec2.Vpc("vpc", { subnets: [{ type: "public" }] });
+const cluster = new eks.Cluster(name, {
+    vpcId: vpc.id,
+    subnetIds: vpc.publicSubnetIds,
+    desiredCapacity: 2,
+    minSize: 1,
+    maxSize: 2,
+    storageClasses: "gp2",
+    deployDashboard: false,
+});
+
+// Export the clusters' kubeconfig.
+export const kubeconfig = cluster.kubeconfig
+```
+
+The index.ts occupies the role as the main entrypoint in our Pulumi program. In it, we are going to declare:
+
+- The resources we want in AWS to provision the EKS cluster based on our cluster configuration settings,
+- The kubeconfig file to access the cluster, and
+- The initialization of a Pulumi Kubernetes provider with the kubeconfig, so that we can deploy Kubernetes resources to the cluster once its ready in the next steps.
+
+You will notice that there is hardly any configuration needed. But this does not mean you cannot tune everything to your harts content. Since we use typescrupt, you can easily find all configuration settings in the type definitions of the `ClusterOptions` argument.
+
+Before we can deploy this cluster, we still need to configure our AWS credentials, there are many options, choose your poison [in the AWS provider documentation](https://www.pulumi.com/docs/intro/cloud-providers/aws/#configuration).
+
+```shell
+pulumi config set aws:accessKey AAAAAAAAAAAAAAAAAAAA --secret
+pulumi config set aws:secretKey m/ZTX/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --secret
+```
+
+By using --secret, the value is encrypted and you can commit it to git. It stores these configuration values in the Pulumi.stackname.yaml file.
+
+We can not deploy the cluster by running
+
+```shell
+pulumi up
+```
+
+{{< image src="/images/2021/chartmuseum-mirror/clustercreation.gif" alt="Cluster creation with pulumi up" position="center" style="border-radius: 8px;" >}}
+
+## Deploying ChartMuseum on our cluster
+
+## Creating your own charts
+
+## Publish your charts to ChartMuseum via Github Actions
+
+## Mirroring other chart repositories

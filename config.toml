@@ -2,8 +2,26 @@ baseURL = "https://vanderveer.be/"
 languageCode = "en-us"
 title = "vanderVeer.be"
 theme = "terminal"
+enableGitInfo = true
+enableRobotsTXT = true
+
+[author]
+  name = "Roderik van der Veer"
+  email = "roderik@vanderveer.be"
+
+[sitemap]
+  changefreq = "weekly"
+  filename = "sitemap.xml"
+  priority = 0.5
+
+[permalinks]
+  posts = "/:year/:title/"
+
 
 [params]
+  AuthorName = "Roderik van der Veer"
+  GitHubUser = "roderik"
+
   # dir name of your main content (default is `content/posts`).
   # the list of set content will show up on your index page (baseurl).
   contentTypeName = "posts"
@@ -21,15 +39,15 @@ theme = "terminal"
   fullWidthTheme = false
 
   # center theme with default width
-  centerTheme = false
+  centerTheme = true
 
   # set a custom favicon (default is a `themeColor` square)
   # favicon = "favicon.ico"
 
   # set post to show the last updated
   # If you use git, you can set `enableGitInfo` to `true` and then post will automatically get the last updated
-  enableGitInfo = true
   showLastUpdated = true
+  enableGitInfo = true
   # Provide a string as a prefix for the last update date. By default, it looks like this: 2020-xx-xx [Updated: 2020-xx-xx] :: Author
   # updatedDatePrefix = "Updated"
 
