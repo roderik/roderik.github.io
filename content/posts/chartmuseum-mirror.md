@@ -110,6 +110,106 @@ pulumi up
 
 ## Deploying ChartMuseum on our cluster
 
+Since we are going to need a domainname pointed tot he chartmuseum instance, we will add a [Cloudflare](https://cloudflare.com) dependency so we can use it to create and manage the domainname. Pulumi supports a lot of DNS providers, as stated before, check the docs for other setups.
+
+```shell
+npm install --save @pulumi/cloudflare
+```
+
+In this case, I'll assume your domainname is already configured in Cloudflare. We will first need your domainnames Zone ID which we will set in the config.
+
+```shell
+pulumi config set zoneId xxxxxxxxxxxxxxxxxxxxx --secret
+pulumi config set cloudflare:email roderik@vanderveer.be
+pulumi config set cloudflare:apiKey xxxxxxxxxxxxxxxxxxxxx --secret
+```
+
+Notice that I set the Zone Id as a secret, while it is not secret, I do not want to expose it in the public GIT repo for this post.
+
+We will start adding a namespace, ingress controller and link the domainname to it. At the bottom of the index.ts file, add the following.
+
+```typescript
+// Create a k8s provider
+const provider = new k8s.Provider('k8s', { kubeconfig });
+
+// Setup a namespace
+
+new k8s.core.v1.Namespace(
+  `${name}-namespace`,
+  { metadata: { name } },
+  { provider }
+);
+
+// Deploy an ingress controller into it
+
+const nginxIngress = new k8s.helm.v3.Chart(
+  `${name}-ingress`,
+  {
+    chart: 'ingress-nginx',
+    version: '3.15.2',
+    fetchOpts: {
+      repo: 'https://kubernetes.github.io/ingress-nginx',
+    },
+    namespace: name,
+    values: {
+      controller: {
+        scope: {
+          enabled: true,
+        },
+        replicaCount: 2,
+        metrics: {
+          enabled: true,
+        },
+        admissionWebhooks: {
+          enabled: false,
+        },
+      },
+    },
+  },
+  {
+    provider,
+    ignoreChanges: ['status', 'metadata'],
+  }
+);
+
+// Fetch the ingress URL from the service
+
+const controllerService = nginxIngress.getResource(
+  'v1/Service',
+  name,
+  `${name}-ingress-ingress-nginx-controller`
+);
+
+const ingressUrl = controllerService.status.apply(
+  (status) => status.loadBalancer.ingress[0].hostname
+);
+
+// Get access to the config
+const config = new pulumi.Config();
+const awsConfig = new pulumi.Config('aws');
+
+// Create a domainname for this ingress using Cloudflare
+new cloudflare.Record(`${name}-dns`, {
+  name: `charts`,
+  zoneId: config.requireSecret('zoneId'),
+  type: 'A',
+  value: ingressUrl,
+  proxied: true,
+});
+```
+
+This will
+
+- create a k8s provider, this provider is similar to setting up your kubeconfig on your computer to execute commands on the cluster;
+- setup a namespace to deploy all the resources in;
+- deploy the ingress-nginx ingress controller into that namespace from the official helm chart repository;
+- when it it deployed, we will fetch the ingress URL from the service, on AWS you get a hostname, on EKS/AKS an IP address;
+- and finally we create an CNAME record in Cloudflare for charts.vanderveer.be to the hostname of our ingress ELB.
+
+Now we will update our infrastructure by running `pulumi up` again.
+
+{{< image src="/images/2021/chartmuseum-mirror/dns.gif" alt="Deploying the ingress and domainname" position="center" style="border-radius: 8px;" >}}
+
 ## Creating your own charts
 
 ## Publish your charts to ChartMuseum via Github Actions
