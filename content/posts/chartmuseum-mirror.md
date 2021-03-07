@@ -494,7 +494,7 @@ fetchOpts: {
 
 Running `pulumi up` again should result in no changes, because the charts are the same, only the storage location is different.
 
-As a last task, we do not want to run `pulumi up` by hand anymore, let's add this to the GitHub actions as well. Create an `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY` and `PULUMI_ACCESS_TOKEN` secret in Github first to matech the values we put in the Pulumi config and your Pulumi account.
+As a last task, we do not want to run `pulumi up` by hand anymore, let's add this to the GitHub actions as well. Create an `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY` and `PULUMI_ACCESS_TOKEN` secret in Github first to match the values we put in the Pulumi config and your Pulumi account.
 
 Add the following at the end of `branch.yml`.
 
