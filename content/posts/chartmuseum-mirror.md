@@ -62,6 +62,7 @@ Open the existing file index.ts, and replace the contents with the following:
 ```typescript
 import * as pulumi from "@pulumi/pulumi";
 import * as awsx from "@pulumi/awsx";
+import * as aws from '@pulumi/aws';
 import * as eks from "@pulumi/eks";
 import * as k8s from "@pulumi/kubernetes";
 
@@ -108,7 +109,7 @@ pulumi up
 
 {{< image src="/images/2021/chartmuseum-mirror/clustercreation.gif" alt="Cluster creation with pulumi up" position="center" style="border-radius: 8px;" >}}
 
-## Deploying ChartMuseum on our cluster
+## An ingress controller and domainname via Cloudflare
 
 Since we are going to need a domainname pointed tot he chartmuseum instance, we will add a [Cloudflare](https://cloudflare.com) dependency so we can use it to create and manage the domainname. Pulumi supports a lot of DNS providers, as stated before, check the docs for other setups.
 
@@ -192,7 +193,7 @@ const awsConfig = new pulumi.Config('aws');
 new cloudflare.Record(`${name}-dns`, {
   name: `charts`,
   zoneId: config.requireSecret('zoneId'),
-  type: 'A',
+  type: 'CNAME',
   value: ingressUrl,
   proxied: true,
 });
@@ -208,7 +209,24 @@ This will
 
 Now we will update our infrastructure by running `pulumi up` again.
 
-{{< image src="/images/2021/chartmuseum-mirror/dns.gif" alt="Deploying the ingress and domainname" position="center" style="border-radius: 8px;" >}}
+{{< image src="/images/2021/chartmuseum-mirror/dns.gif" alt="Cluster creation with pulumi up" position="center" style="border-radius: 8px;" >}}
+
+## Deploying ChartMuseum on our cluster
+
+We want to keep our charts private, where chartmuseum has several options, we will go for basic authentication. We will define the values for this in the config.
+
+```shell
+pulumi config set chartmuseumUser chartmuseum
+pulumi config set chartmuseumPass random --secret
+```
+
+At the bottom of the index.ts file, let's add the code to create the S3 bucket and deploy the helmchart for chartmuseum.
+
+```typescript
+
+```
+
+Take notice of the DEPTH environment variable. Some of the repositories we want to mirror later on have naming conflicts for their charts. By adding 1 folder, we can use <https://charts.vanderveer.be/mirror1> and /mirror2 to store the different mirrors.
 
 ## Creating your own charts
 
