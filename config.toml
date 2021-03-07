@@ -5,6 +5,8 @@ theme = "terminal"
 enableGitInfo = true
 enableRobotsTXT = true
 
+disqusShortname = "roderikvanderveer"
+
 [author]
   name = "Roderik van der Veer"
   email = "roderik@vanderveer.be"
