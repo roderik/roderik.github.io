@@ -1,5 +1,5 @@
 <!doctype html><html lang=en><head><title>Chartmuseum Mirror :: vanderVeer.be</title><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Since the stable and incubation helm chart repositories are deprecated, charts are published in a multitude of locations. Unfortunately not all these locations are as stable as you would expect them to be. In this post we will setup Chartmuseum on a Kubernetes cluster, backed by AWS S3 and use it and Github Actions to publish our own charts and mirror the repositoreis we need.
-Using Pulumi to bootstrap our infrastructure Pulumi is a tool that allows us to leverage familiar programming languages to define our infrastructure as code."><meta name=keywords content=","><meta name=robots content="noodp"><link rel=canonical href=https://vanderveer.be/2021/chartmuseum-mirror/><link rel=stylesheet href=https://vanderveer.be/assets/style.css><link rel=stylesheet href=https://vanderveer.be/assets/red.css><link rel=apple-touch-icon href=https://vanderveer.be/img/apple-touch-icon-192x192.png><link rel="shortcut icon" href=https://vanderveer.be/img/favicon/red.png><meta name=twitter:card content="summary"><meta name=twitter:site content="https://vanderveer.be"><meta name=twitter:creator content="r0derik"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="Chartmuseum Mirror"><meta property="og:description" content="Since the stable and incubation helm chart repositories are deprecated, charts are published in a multitude of locations. Unfortunately not all these locations are as stable. In this post we will setup Chartmuseum on a Kubernetes cluster, backed by AWS S3 and use it and Github Actions to publish our own charts and mirror the repositoreis we need."><meta property="og:url" content="https://vanderveer.be/2021/chartmuseum-mirror/"><meta property="og:site_name" content="vanderVeer.be"><meta property="og:image" content="https://vanderveer.be/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2021-02-24 17:57:35 +0100 +0100"></head><body class=red><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>vanderVeer.be</div></a></div><div class=menu-trigger>menu</div></div><nav class=menu><ul class="menu__inner menu__inner--desktop"><li><a href=/about>About</a></li></ul><ul class="menu__inner menu__inner--mobile"><li><a href=/about>About</a></li></ul></nav></header><div class=content><div class=post><h1 class=post-title><a href=https://vanderveer.be/2021/chartmuseum-mirror/>Chartmuseum Mirror</a></h1><div class=post-meta><span class=post-date>2021-02-24 [Updated: 2021-03-07]</span>
+Using Pulumi to bootstrap our infrastructure Pulumi is a tool that allows us to leverage familiar programming languages to define our infrastructure as code."><meta name=keywords content=","><meta name=robots content="noodp"><link rel=canonical href=https://vanderveer.be/2021/chartmuseum-mirror/><script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-26890239-1','auto'),ga('send','pageview'))</script><link rel=stylesheet href=https://vanderveer.be/assets/style.css><link rel=stylesheet href=https://vanderveer.be/assets/red.css><link rel=apple-touch-icon href=https://vanderveer.be/img/apple-touch-icon-192x192.png><link rel="shortcut icon" href=https://vanderveer.be/img/favicon/red.png><meta name=twitter:card content="summary"><meta name=twitter:site content="https://vanderveer.be"><meta name=twitter:creator content="r0derik"><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="og:title" content="Chartmuseum Mirror"><meta property="og:description" content="Since the stable and incubation helm chart repositories are deprecated, charts are published in a multitude of locations. Unfortunately not all these locations are as stable. In this post we will setup Chartmuseum on a Kubernetes cluster, backed by AWS S3 and use it and Github Actions to publish our own charts and mirror the repositoreis we need."><meta property="og:url" content="https://vanderveer.be/2021/chartmuseum-mirror/"><meta property="og:site_name" content="vanderVeer.be"><meta property="og:image" content="https://vanderveer.be/"><meta property="og:image:width" content="2048"><meta property="og:image:height" content="1024"><meta property="article:published_time" content="2021-02-24 17:57:35 +0100 +0100"></head><body class=red><div class="container center headings--one-size"><header class=header><div class=header__inner><div class=header__logo><a href=/><div class=logo>vanderVeer.be</div></a></div><div class=menu-trigger>menu</div></div><nav class=menu><ul class="menu__inner menu__inner--desktop"><li><a href=/about>About</a></li></ul><ul class="menu__inner menu__inner--mobile"><li><a href=/about>About</a></li></ul></nav></header><div class=content><div class=post><h1 class=post-title><a href=https://vanderveer.be/2021/chartmuseum-mirror/>Chartmuseum Mirror</a></h1><div class=post-meta><span class=post-date>2021-02-24 [Updated: 2021-03-07]</span>
 <span class=post-author>:: Roderik van der Veer</span></div><span class=post-tags>#<a href=https://vanderveer.be/tags/devops/>devops</a>&nbsp;
 #<a href=https://vanderveer.be/tags/helm/>helm</a>&nbsp;
 #<a href=https://vanderveer.be/tags/chartmuseum/>chartmuseum</a>&nbsp;</span><div class=post-content><div><p>Since the stable and incubation helm chart repositories are deprecated, charts are published in a multitude of locations. Unfortunately not all these locations are as stable as you would expect them to be. In this post we will setup Chartmuseum on a Kubernetes cluster, backed by AWS S3 and use it and Github Actions to publish our own charts and mirror the repositoreis we need.</p><h2 id=using-pulumi-to-bootstrap-our-infrastructure>Using Pulumi to bootstrap our infrastructure<a href=#using-pulumi-to-bootstrap-our-infrastructure class=hanchor arialabel=Anchor>&#8983;</a></h2><p><a href=https://www.pulumi.com>Pulumi</a> is a tool that allows us to leverage familiar programming languages to define our infrastructure as code. In this post we will be using the Typescript version of Pulumi together with a free account.</p><p>Let&rsquo;s install Pulumi using <a href=https://brew.sh>Homebrew</a> since I use MacOS. You can use Pulumi on any operating system and <a href=https://www.pulumi.com/docs/get-started/install/>the installation instructions can be found in the documentation</a>. FYI, a lot of the Pulumi code samples is copied from the Pulumi documentation, the go-to source for anything you want to do with Pulumi.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sh data-lang=sh>brew install pulumi
@@ -8,28 +8,24 @@ Using Pulumi to bootstrap our infrastructure Pulumi is a tool that allows us to 
 </code></pre></div><p>This handled, we will create the Pulumi stack for this tutorial.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>mkdir chartmuseum-tutorial <span style=color:#f92672>&amp;&amp;</span> cd chartmuseum-tutorial
 pulumi new aws-typescript
 </code></pre></div><p>The Pulumi CLI will ask you some questions to complete the setup</p><ul><li>Enter in a Pulumi project name, and description to detail what this Pulumi program does</li><li>Enter in a name for the Pulumi stack, which is an instance of our Pulumi program, and is used to distinguish amongst different development phases and environments of your work streams.</li><li>Your preferred AWS zone</li></ul><h2 id=setting-up-the-kubernetes-cluster-on-eks>Setting up the Kubernetes Cluster on EKS<a href=#setting-up-the-kubernetes-cluster-on-eks class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Let&rsquo;s start off by creating the cluster. First we need to add some more dependencies.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>npm install --save @pulumi/eks @pulumi/kubernetes
-</code></pre></div><p>Open the existing file index.ts, and replace the contents with the following:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>pulumi</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;@pulumi/pulumi&#34;</span>;
-<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>awsx</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;@pulumi/awsx&#34;</span>;
+</code></pre></div><p>Open the existing file index.ts, and replace the contents with the following:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>pulumi</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#39;@pulumi/pulumi&#39;</span>;
 <span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>aws</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#39;@pulumi/aws&#39;</span>;
-<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>eks</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;@pulumi/eks&#34;</span>;
-<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>k8s</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;@pulumi/kubernetes&#34;</span>;
+<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>eks</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#39;@pulumi/eks&#39;</span>;
+<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>k8s</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#39;@pulumi/kubernetes&#39;</span>;
+<span style=color:#66d9ef>import</span> <span style=color:#f92672>*</span> <span style=color:#66d9ef>as</span> <span style=color:#a6e22e>cloudflare</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#39;@pulumi/cloudflare&#39;</span>;
 
-<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>name</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;chartmuseum&#34;</span>;
+<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>name</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;chartmuseum&#39;</span>;
 
-<span style=color:#75715e>// Create an EKS cluster with non-default configuration
-</span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>vpc</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>awsx</span>.<span style=color:#a6e22e>ec2</span>.<span style=color:#a6e22e>Vpc</span>(<span style=color:#e6db74>&#34;vpc&#34;</span>, { <span style=color:#a6e22e>subnets</span><span style=color:#f92672>:</span> [{ <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;public&#34;</span> }] });
-<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>cluster</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>eks</span>.<span style=color:#a6e22e>Cluster</span>(<span style=color:#a6e22e>name</span>, {
-    <span style=color:#a6e22e>vpcId</span>: <span style=color:#66d9ef>vpc.id</span>,
-    <span style=color:#a6e22e>subnetIds</span>: <span style=color:#66d9ef>vpc.publicSubnetIds</span>,
-    <span style=color:#a6e22e>desiredCapacity</span>: <span style=color:#66d9ef>2</span>,
-    <span style=color:#a6e22e>minSize</span>: <span style=color:#66d9ef>1</span>,
-    <span style=color:#a6e22e>maxSize</span>: <span style=color:#66d9ef>2</span>,
-    <span style=color:#a6e22e>storageClasses</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;gp2&#34;</span>,
-    <span style=color:#a6e22e>deployDashboard</span>: <span style=color:#66d9ef>false</span>,
+<span style=color:#75715e>// Create an EKS cluster
+</span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>cluster</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>eks</span>.<span style=color:#a6e22e>Cluster</span>(<span style=color:#a6e22e>name</span>, {
+  <span style=color:#a6e22e>instanceType</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;t2.medium&#39;</span>,
+  <span style=color:#a6e22e>desiredCapacity</span>: <span style=color:#66d9ef>1</span>,
+  <span style=color:#a6e22e>minSize</span>: <span style=color:#66d9ef>1</span>,
+  <span style=color:#a6e22e>maxSize</span>: <span style=color:#66d9ef>2</span>,
 });
 
 <span style=color:#75715e>// Export the clusters&#39; kubeconfig.
-</span><span style=color:#75715e></span><span style=color:#66d9ef>export</span> <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>kubeconfig</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>kubeconfig</span>
+</span><span style=color:#75715e></span><span style=color:#66d9ef>export</span> <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>kubeconfig</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>kubeconfig</span>;
 </code></pre></div><p>The index.ts occupies the role as the main entrypoint in our Pulumi program. In it, we are going to declare:</p><ul><li>The resources we want in AWS to provision the EKS cluster based on our cluster configuration settings,</li><li>The kubeconfig file to access the cluster, and</li><li>The initialization of a Pulumi Kubernetes provider with the kubeconfig, so that we can deploy Kubernetes resources to the cluster once its ready in the next steps.</li></ul><p>You will notice that there is hardly any configuration needed. But this does not mean you cannot tune everything to your harts content. Since we use typescrupt, you can easily find all configuration settings in the type definitions of the <code>ClusterOptions</code> argument.</p><p>Before we can deploy this cluster, we still need to configure our AWS credentials, there are many options, choose your poison <a href=https://www.pulumi.com/docs/intro/cloud-providers/aws/#configuration>in the AWS provider documentation</a>.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>pulumi config set aws:accessKey AAAAAAAAAAAAAAAAAAAA --secret
 pulumi config set aws:secretKey m/ZTX/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --secret
 </code></pre></div><p>By using &ndash;secret, the value is encrypted and you can commit it to git. It stores these configuration values in the Pulumi.stackname.yaml file.</p><p>We can not deploy the cluster by running</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>pulumi up
@@ -37,16 +33,15 @@ pulumi config set aws:secretKey m/ZTX/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --secret
 </code></pre></div><p>In this case, I&rsquo;ll assume your domainname is already configured in Cloudflare. We will first need your domainnames Zone ID which we will set in the config.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>pulumi config set zoneId xxxxxxxxxxxxxxxxxxxxx --secret
 pulumi config set cloudflare:email roderik@vanderveer.be
 pulumi config set cloudflare:apiKey xxxxxxxxxxxxxxxxxxxxx --secret
-</code></pre></div><p>Notice that I set the Zone Id as a secret, while it is not secret, I do not want to expose it in the public GIT repo for this post.</p><p>We will start adding a namespace, ingress controller and link the domainname to it. At the bottom of the index.ts file, add the following.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#75715e>// Create a k8s provider
+</code></pre></div><p>Notice that I set the Zone Id as a secret, while it is not secret, I do not want to expose it in the public GIT repo for this post.</p><p>We will start adding a namespace, ingress controller and link the domainname to it. At the bottom of the index.ts file, add the following.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#75715e>// Export the clusters&#39; kubeconfig.
+</span><span style=color:#75715e></span><span style=color:#66d9ef>export</span> <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>kubeconfig</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>kubeconfig</span>;
+
+<span style=color:#75715e>// Create a k8s provider
 </span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>provider</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>k8s</span>.<span style=color:#a6e22e>Provider</span>(<span style=color:#e6db74>&#39;k8s&#39;</span>, { <span style=color:#a6e22e>kubeconfig</span> });
 
 <span style=color:#75715e>// Setup a namespace
 </span><span style=color:#75715e></span>
-<span style=color:#66d9ef>new</span> <span style=color:#a6e22e>k8s</span>.<span style=color:#a6e22e>core</span>.<span style=color:#a6e22e>v1</span>.<span style=color:#a6e22e>Namespace</span>(
-  <span style=color:#e6db74>`</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>name</span><span style=color:#e6db74>}</span><span style=color:#e6db74>-namespace`</span>,
-  { <span style=color:#a6e22e>metadata</span><span style=color:#f92672>:</span> { <span style=color:#a6e22e>name</span> } },
-  { <span style=color:#a6e22e>provider</span> }
-);
+<span style=color:#66d9ef>new</span> <span style=color:#a6e22e>k8s</span>.<span style=color:#a6e22e>core</span>.<span style=color:#a6e22e>v1</span>.<span style=color:#a6e22e>Namespace</span>(<span style=color:#e6db74>`</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>name</span><span style=color:#e6db74>}</span><span style=color:#e6db74>-namespace`</span>, { <span style=color:#a6e22e>metadata</span><span style=color:#f92672>:</span> { <span style=color:#a6e22e>name</span> } }, { <span style=color:#a6e22e>provider</span> });
 
 <span style=color:#75715e>// Deploy an ingress controller into it
 </span><span style=color:#75715e></span>
@@ -82,15 +77,9 @@ pulumi config set cloudflare:apiKey xxxxxxxxxxxxxxxxxxxxx --secret
 
 <span style=color:#75715e>// Fetch the ingress URL from the service
 </span><span style=color:#75715e></span>
-<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>controllerService</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>nginxIngress</span>.<span style=color:#a6e22e>getResource</span>(
-  <span style=color:#e6db74>&#39;v1/Service&#39;</span>,
-  <span style=color:#a6e22e>name</span>,
-  <span style=color:#e6db74>`</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>name</span><span style=color:#e6db74>}</span><span style=color:#e6db74>-ingress-ingress-nginx-controller`</span>
-);
+<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>controllerService</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>nginxIngress</span>.<span style=color:#a6e22e>getResource</span>(<span style=color:#e6db74>&#39;v1/Service&#39;</span>, <span style=color:#a6e22e>name</span>, <span style=color:#e6db74>`</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>name</span><span style=color:#e6db74>}</span><span style=color:#e6db74>-ingress-ingress-nginx-controller`</span>);
 
-<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>ingressUrl</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>controllerService</span>.<span style=color:#a6e22e>status</span>.<span style=color:#a6e22e>apply</span>(
-  (<span style=color:#a6e22e>status</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>status</span>.<span style=color:#a6e22e>loadBalancer</span>.<span style=color:#a6e22e>ingress</span>[<span style=color:#ae81ff>0</span>].<span style=color:#a6e22e>hostname</span>
-);
+<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>ingressUrl</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>controllerService</span>.<span style=color:#a6e22e>status</span>.<span style=color:#a6e22e>apply</span>((<span style=color:#a6e22e>status</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>status</span>.<span style=color:#a6e22e>loadBalancer</span>.<span style=color:#a6e22e>ingress</span>[<span style=color:#ae81ff>0</span>].<span style=color:#a6e22e>hostname</span>);
 
 <span style=color:#75715e>// Get access to the config
 </span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>config</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>pulumi</span>.<span style=color:#a6e22e>Config</span>();
@@ -106,6 +95,232 @@ pulumi config set cloudflare:apiKey xxxxxxxxxxxxxxxxxxxxx --secret
 });
 </code></pre></div><p>This will</p><ul><li>create a k8s provider, this provider is similar to setting up your kubeconfig on your computer to execute commands on the cluster;</li><li>setup a namespace to deploy all the resources in;</li><li>deploy the ingress-nginx ingress controller into that namespace from the official helm chart repository;</li><li>when it it deployed, we will fetch the ingress URL from the service, on AWS you get a hostname, on EKS/AKS an IP address;</li><li>and finally we create an CNAME record in Cloudflare for charts.vanderveer.be to the hostname of our ingress ELB.</li></ul><p>Now we will update our infrastructure by running <code>pulumi up</code> again.</p><img src=/images/2021/chartmuseum-mirror/dns.gif alt="Cluster creation with pulumi up" class=center style=border-radius:8px><h2 id=deploying-chartmuseum-on-our-cluster>Deploying ChartMuseum on our cluster<a href=#deploying-chartmuseum-on-our-cluster class=hanchor arialabel=Anchor>&#8983;</a></h2><p>We want to keep our charts private, where chartmuseum has several options, we will go for basic authentication. We will define the values for this in the config.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>pulumi config set chartmuseumUser chartmuseum
 pulumi config set chartmuseumPass random --secret
-</code></pre></div><p>At the bottom of the index.ts file, let&rsquo;s add the code to create the S3 bucket and deploy the helmchart for chartmuseum.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript>
-</code></pre></div><p>Take notice of the DEPTH environment variable. Some of the repositories we want to mirror later on have naming conflicts for their charts. By adding 1 folder, we can use <a href=https://charts.vanderveer.be/mirror1>https://charts.vanderveer.be/mirror1</a> and /mirror2 to store the different mirrors.</p><h2 id=creating-your-own-charts>Creating your own charts<a href=#creating-your-own-charts class=hanchor arialabel=Anchor>&#8983;</a></h2><h2 id=publish-your-charts-to-chartmuseum-via-github-actions>Publish your charts to ChartMuseum via Github Actions<a href=#publish-your-charts-to-chartmuseum-via-github-actions class=hanchor arialabel=Anchor>&#8983;</a></h2><h2 id=mirroring-other-chart-repositories>Mirroring other chart repositories<a href=#mirroring-other-chart-repositories class=hanchor arialabel=Anchor>&#8983;</a></h2></div></div><div id=disqus_thread></div><script type=application/javascript>var disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return}var b=document,a=b.createElement('script');a.async=!0,a.src='//roderikvanderveer.disqus.com/embed.js',a.setAttribute('data-timestamp',+new Date),(b.head||b.body).appendChild(a)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div><footer class=footer><div class=footer__inner><div class="copyright copyright--user"><span>&copy 2021</span>
+</code></pre></div><p>At the bottom of the index.ts file, let&rsquo;s add the code to create the S3 bucket and deploy the helmchart for chartmuseum.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#75715e>// Create the S3 bucket to store the charts
+</span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>bucket</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>aws</span>.<span style=color:#a6e22e>s3</span>.<span style=color:#a6e22e>Bucket</span>(<span style=color:#e6db74>`</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>name</span><span style=color:#e6db74>}</span><span style=color:#e6db74>-bucket`</span>);
+
+<span style=color:#75715e>// Deploy Chartmuseum
+</span><span style=color:#75715e></span><span style=color:#66d9ef>new</span> <span style=color:#a6e22e>k8s</span>.<span style=color:#a6e22e>helm</span>.<span style=color:#a6e22e>v3</span>.<span style=color:#a6e22e>Chart</span>(
+  <span style=color:#e6db74>`chartmuseum`</span>,
+  {
+    <span style=color:#a6e22e>chart</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;chartmuseum&#39;</span>,
+    <span style=color:#a6e22e>version</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;2.15.0&#39;</span>,
+    <span style=color:#a6e22e>fetchOpts</span><span style=color:#f92672>:</span> {
+      <span style=color:#a6e22e>repo</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;https://chartmuseum.github.io/charts&#39;</span>,
+    },
+    <span style=color:#66d9ef>namespace</span><span style=color:#f92672>:</span> <span style=color:#a6e22e>name</span>,
+    <span style=color:#a6e22e>values</span><span style=color:#f92672>:</span> {
+      <span style=color:#a6e22e>ingress</span><span style=color:#f92672>:</span> {
+        <span style=color:#a6e22e>enabled</span>: <span style=color:#66d9ef>true</span>,
+        <span style=color:#a6e22e>annotations</span><span style=color:#f92672>:</span> {
+          <span style=color:#e6db74>&#39;kubernetes.io/ingress.class&#39;</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;nginx&#39;</span>,
+          <span style=color:#e6db74>&#39;nginx.ingress.kubernetes.io/proxy-body-size&#39;</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;100m&#39;</span>,
+          <span style=color:#e6db74>&#39;nginx.ingress.kubernetes.io/enable-cors&#39;</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;true&#39;</span>,
+          <span style=color:#e6db74>&#39;nginx.ingress.kubernetes.io/cors-allow-headers&#39;</span><span style=color:#f92672>:</span>
+            <span style=color:#e6db74>&#39;DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Apollo-Tracing&#39;</span>,
+        },
+        <span style=color:#a6e22e>hosts</span><span style=color:#f92672>:</span> [
+          {
+            <span style=color:#a6e22e>name</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;charts.vanderveer.be&#39;</span>,
+            <span style=color:#a6e22e>path</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;/&#39;</span>,
+          },
+        ],
+      },
+      <span style=color:#a6e22e>env</span><span style=color:#f92672>:</span> {
+        <span style=color:#a6e22e>open</span><span style=color:#f92672>:</span> {
+          <span style=color:#a6e22e>STORAGE</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;amazon&#39;</span>,
+          <span style=color:#a6e22e>STORAGE_AMAZON_BUCKET</span>: <span style=color:#66d9ef>bucket.bucket.apply</span>((<span style=color:#a6e22e>bucket</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>bucket</span>),
+          <span style=color:#a6e22e>STORAGE_AMAZON_REGION</span>: <span style=color:#66d9ef>awsConfig.require</span>(<span style=color:#e6db74>&#39;region&#39;</span>),
+          <span style=color:#a6e22e>DEBUG</span>: <span style=color:#66d9ef>true</span>,
+          <span style=color:#a6e22e>DISABLE_API</span>: <span style=color:#66d9ef>false</span>,
+          <span style=color:#a6e22e>ALLOW_OVERWRITE</span>: <span style=color:#66d9ef>true</span>,
+          <span style=color:#a6e22e>AUTH_ANONYMOUS_GET</span>: <span style=color:#66d9ef>true</span>,
+          <span style=color:#a6e22e>DEPTH</span>: <span style=color:#66d9ef>1</span>,
+        },
+        <span style=color:#a6e22e>secret</span><span style=color:#f92672>:</span> {
+          <span style=color:#a6e22e>AWS_ACCESS_KEY_ID</span>: <span style=color:#66d9ef>awsConfig.requireSecret</span>(<span style=color:#e6db74>&#39;accessKey&#39;</span>),
+          <span style=color:#a6e22e>AWS_SECRET_ACCESS_KEY</span>: <span style=color:#66d9ef>awsConfig.requireSecret</span>(<span style=color:#e6db74>&#39;secretKey&#39;</span>),
+          <span style=color:#a6e22e>BASIC_AUTH_USER</span>: <span style=color:#66d9ef>config.require</span>(<span style=color:#e6db74>&#39;chartmuseumUser&#39;</span>),
+          <span style=color:#a6e22e>BASIC_AUTH_PASS</span>: <span style=color:#66d9ef>config.requireSecret</span>(<span style=color:#e6db74>&#39;chartmuseumPass&#39;</span>),
+        },
+      },
+    },
+  },
+  { <span style=color:#a6e22e>provider</span> }
+);
+</code></pre></div><p>Take notice of the DEPTH environment variable. Some of the repositories we want to mirror later on have naming conflicts for their charts. By adding 1 folder, we can use <a href=https://charts.vanderveer.be/mirror1>https://charts.vanderveer.be/mirror1</a> and /mirror2 to store the different mirrors.</p><p>After it deploys, you will the default chartmuseum homepage when you browse to your URL.</p><img src=/images/2021/chartmuseum-mirror/chartmuseum.png alt="Chartmuseum homepage" class=center style=border-radius:8px><h2 id=creating-your-own-charts>Creating your own charts<a href=#creating-your-own-charts class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Now Chartmuseum is installed, we will start a on our own helm charts. Create folder named <code>charts</code>. (can be anything, but for the sake of this tutorial it will help 😀) Inside, we will create an example chart. How this works or what you can do with Helm charts is beyond the purview of this tutorial.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>mkdir -p charts
+cd charts
+helm create example
+</code></pre></div><p>In the chart, there is a file called Chart.yaml in which two fields are important. The <code>name</code>, and the <code>version</code>.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v2</span>
+<span style=color:#f92672>name</span>: <span style=color:#ae81ff>example</span>
+<span style=color:#f92672>description</span>: <span style=color:#ae81ff>A Helm chart for Kubernetes</span>
+
+<span style=color:#75715e># A chart can be either an &#39;application&#39; or a &#39;library&#39; chart.</span>
+<span style=color:#75715e>#</span>
+<span style=color:#75715e># Application charts are a collection of templates that can be packaged into versioned archives</span>
+<span style=color:#75715e># to be deployed.</span>
+<span style=color:#75715e>#</span>
+<span style=color:#75715e># Library charts provide useful utilities or functions for the chart developer. They&#39;re included as</span>
+<span style=color:#75715e># a dependency of application charts to inject those utilities and functions into the rendering</span>
+<span style=color:#75715e># pipeline. Library charts do not define any templates and therefore cannot be deployed.</span>
+<span style=color:#f92672>type</span>: <span style=color:#ae81ff>application</span>
+
+<span style=color:#75715e># This is the chart version. This version number should be incremented each time you make changes</span>
+<span style=color:#75715e># to the chart and its templates, including the app version.</span>
+<span style=color:#75715e># Versions are expected to follow Semantic Versioning (https://semver.org/)</span>
+<span style=color:#f92672>version</span>: <span style=color:#ae81ff>0.1.0</span>
+
+<span style=color:#75715e># This is the version number of the application being deployed. This version number should be</span>
+<span style=color:#75715e># incremented each time you make changes to the application. Versions are not expected to</span>
+<span style=color:#75715e># follow Semantic Versioning. They should reflect the version the application is using.</span>
+<span style=color:#75715e># It is recommended to use it with quotes.</span>
+<span style=color:#f92672>appVersion</span>: <span style=color:#e6db74>&#34;1.16.0&#34;</span>
+</code></pre></div><p>Similar to the previous example, we will be installing the chart as follows, where the name and the version will be the ones from the Chart.yaml file.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#a6e22e>chart</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;chartmuseum&#39;</span>,                           <span style=color:#f92672>--&gt;</span> <span style=color:#a6e22e>chart</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;example&#39;</span>,
+<span style=color:#a6e22e>version</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;2.15.0&#39;</span>,                              <span style=color:#f92672>--&gt;</span> <span style=color:#a6e22e>version</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;0.1.0&#39;</span>,
+<span style=color:#a6e22e>fetchOpts</span><span style=color:#f92672>:</span> {
+  <span style=color:#a6e22e>repo</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;https://chartmuseum.github.io/charts&#39;</span>, <span style=color:#f92672>--&gt;</span> <span style=color:#a6e22e>repo</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;https://charts.vanderveer.be/vanderveer&#39;</span>,
+},
+</code></pre></div><h2 id=publish-your-charts-to-chartmuseum-via-github-actions>Publish your charts to ChartMuseum via Github Actions<a href=#publish-your-charts-to-chartmuseum-via-github-actions class=hanchor arialabel=Anchor>&#8983;</a></h2><p>We will package the chaart using a Github Actions workflow, let&rsquo;s set that up.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>mkdir -p .github/workflows
+</code></pre></div><p>Inside create a workflow file named <code>branch.yml</code> and put the following code in there. Before you push this to github, create the HELM_USERNAME and HELM_PASSWORD secrets in your repository, use the values we used for chartmuseumPass and chartmuseumUser above..</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Release the helm charts</span>
+<span style=color:#f92672>on</span>:
+  <span style=color:#f92672>push</span>:
+    <span style=color:#f92672>branches</span>:
+      - <span style=color:#ae81ff>main</span>
+
+<span style=color:#f92672>jobs</span>:
+  <span style=color:#f92672>charts</span>:
+    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+    <span style=color:#f92672>steps</span>:
+      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Checkout</span>
+        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v2</span>
+
+      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Install Helm</span>
+        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>azure/setup-helm@v1</span>
+
+      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Install Helm Push</span>
+        <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>          </span>          <span style=color:#ae81ff>helm plugin install https://github.com/chartmuseum/helm-push.git</span>
+
+      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Configure chartmuseum repo</span>
+        <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>          </span>          <span style=color:#ae81ff>helm repo add vanderveer https://${{ secrets.HELM_USERNAME }}:${{ secrets.HELM_PASSWORD }}@charts.vanderveer.be/vanderveer</span>
+
+      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Upload the vanderveer charts</span>
+        <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>          cd ./charts/
+</span><span style=color:#e6db74>          for d in */ ; do
+</span><span style=color:#e6db74>            helm push &#34;./$d&#34; vanderveer --debug;
+</span><span style=color:#e6db74>          done;
+</span><span style=color:#e6db74>          cd ..</span>          
+</code></pre></div><p>Push this to the GitHub repository and take a look at your actions log.</p><img src=/images/2021/chartmuseum-mirror/ghapush.png alt="Github Action pushing charts" class=center style=border-radius:8px><p>Checking the YAML file at <code>https://charts.vanderveer.be/vanderveer/index.yaml</code> you should see something like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
+<span style=color:#f92672>entries</span>:
+  <span style=color:#f92672>example</span>:
+  - <span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v2</span>
+    <span style=color:#f92672>appVersion</span>: <span style=color:#ae81ff>1.16.0</span>
+    <span style=color:#f92672>created</span>: <span style=color:#e6db74>&#34;2021-03-07T21:27:16Z&#34;</span>
+    <span style=color:#f92672>description</span>: <span style=color:#ae81ff>A Helm chart for Kubernetes</span>
+    <span style=color:#f92672>digest</span>: <span style=color:#ae81ff>edc5dad40ad631d5a5dcb008ac0b0699c72fc7aa8fc461506ed3c2422cddc15e</span>
+    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>example</span>
+    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>application</span>
+    <span style=color:#f92672>urls</span>:
+    - <span style=color:#ae81ff>charts/example-0.1.0.tgz</span>
+    <span style=color:#f92672>version</span>: <span style=color:#ae81ff>0.1.0</span>
+<span style=color:#f92672>generated</span>: <span style=color:#e6db74>&#34;2021-03-07T21:29:13Z&#34;</span>
+<span style=color:#f92672>serverInfo</span>: {}
+</code></pre></div><h2 id=mirroring-other-chart-repositories>Mirroring other chart repositories<a href=#mirroring-other-chart-repositories class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Moving on to the mirroring part. We used charts from <code>https://kubernetes.github.io/ingress-nginx</code> and <code>https://chartmuseum.github.io/charts</code>, and we want to make sure they never dissapear because we depend on them.</p><p>Create a folder called scripts and put this into mirror.sh inside that folder. Make sure to make the file executable.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>mkdir -p scripts
+vim scripts/mirror.sh
+chmod a+x scripts/mirror.sh
+</code></pre></div><p>At the bottom of the file we put the repositories we want to mirror.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e>#!/bin/bash -ex
+</span><span style=color:#75715e></span>
+DIR<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>$(</span> cd <span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>$(</span> dirname <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>BASH_SOURCE[0]<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> <span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>&amp;&amp;</span> pwd <span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span>
+cd $DIR/../
+
+trap <span style=color:#e6db74>&#34;rm -f index.yaml&#34;</span> EXIT
+
+get_all_tgzs<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    mkdir -p mirror/$1
+    helm repo add $1 https://<span style=color:#e6db74>${</span>HELM_USERNAME<span style=color:#e6db74>}</span>:<span style=color:#e6db74>${</span>HELM_PASSWORD<span style=color:#e6db74>}</span>@charts.vanderveer.be/$1
+    local repo_url<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span>
+    rm -f index.yaml
+    wget $repo_url/index.yaml
+    tgzs<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>$(</span>ruby -ryaml -e <span style=color:#e6db74>&#34;YAML.load_file(&#39;index.yaml&#39;)[&#39;entries&#39;].each do |k,e|;for c in e;puts c[&#39;urls&#39;][0];end;end&#34;</span><span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span>
+
+    pushd mirror/$1
+    <span style=color:#66d9ef>for</span> tgz in $tgzs; <span style=color:#66d9ef>do</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> ! -f <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>tgz##*/<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+            wget $tgz
+            helm push <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>tgz##*/<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> $1 --debug;
+        <span style=color:#66d9ef>fi</span>
+    <span style=color:#66d9ef>done</span>
+    popd
+<span style=color:#f92672>}</span>
+
+get_all_tgzs ingress-nginx https://kubernetes.github.io/ingress-nginx
+get_all_tgzs chartmuseum https://chartmuseum.github.io/charts
+</code></pre></div><p>This script will download all charts and versions of the charts, and push them to our own repository under the foldername we set in the first parameter of <code>get_all_tgzs</code>.</p><p>We add the following to the <code>branch.yml</code> file for our githbu actions at the bottom. Notice we use a caching step in here. Some of these repositories are HUGE (e.g. bitnami, takes over an hour to mirror) and we do not want to do this every time for every chart. So by caching the downloads and checking on them in the script, we can seriously speed up this process on the second run.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Get Date</span>
+  <span style=color:#f92672>id</span>: <span style=color:#ae81ff>get-date</span>
+  <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>    </span>    <span style=color:#ae81ff>echo &#34;::set-output name=date::$(/bin/date -u &#34;+%Y%m%d%H%m%s&#34;)&#34;</span>
+  <span style=color:#f92672>shell</span>: <span style=color:#ae81ff>bash</span>
+
+- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Cache mirror</span>
+  <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/cache@v2</span>
+  <span style=color:#f92672>with</span>:
+    <span style=color:#f92672>path</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>      </span>      <span style=color:#ae81ff>mirror</span>
+    <span style=color:#f92672>key</span>: <span style=color:#ae81ff>${{ runner.os }}-chartmuseum-${{ steps.get-date.outputs.date }}</span>
+    <span style=color:#f92672>restore-keys</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>      </span>      <span style=color:#ae81ff>${{ runner.os }}-chartmuseum</span>
+- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Mirror charts</span>
+  <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span><span style=color:#e6db74>    </span>    <span style=color:#ae81ff>./scripts/mirror.sh</span>
+  <span style=color:#f92672>env</span>:
+    <span style=color:#f92672>HELM_USERNAME</span>: <span style=color:#ae81ff>${{ secrets.HELM_USERNAME }}</span>
+    <span style=color:#f92672>HELM_PASSWORD</span>: <span style=color:#ae81ff>${{ secrets.HELM_PASSWORD }}</span>
+</code></pre></div><p>Commit this and push it to GitHub. The action will take about 40 seconds since these two repositories are not very large.</p><img src=/images/2021/chartmuseum-mirror/mirror.png alt="Github Action mirroring all the charts" class=center style=border-radius:8px><p>Check out the index.yaml file to see if it worked:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>curl -i https://charts.vanderveer.be/ingress-nginx/index.yaml
+</code></pre></div><h2 id=maintaining-the-infrastructure-via-github-actions>Maintaining the infrastructure via Github Actions<a href=#maintaining-the-infrastructure-via-github-actions class=hanchor arialabel=Anchor>&#8983;</a></h2><p>Now we only need to circle back and use them ourselves. Move the <code>const config = new pulumi.Config();</code> declaration to the top and change the fetchOpts of both charts to:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#a6e22e>fetchOpts</span><span style=color:#f92672>:</span> {
+  <span style=color:#a6e22e>repo</span>: <span style=color:#66d9ef>config</span>
+    .<span style=color:#a6e22e>requireSecret</span>(<span style=color:#e6db74>&#39;chartmuseumPass&#39;</span>)
+    .<span style=color:#a6e22e>apply</span>(
+      (<span style=color:#a6e22e>password</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#e6db74>`https://</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>config</span>.<span style=color:#66d9ef>require</span>(<span style=color:#e6db74>&#39;chartmuseumUser&#39;</span>)<span style=color:#e6db74>}</span><span style=color:#e6db74>:</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>password</span><span style=color:#e6db74>}</span><span style=color:#e6db74>@charts.vanderveer.be/ingress-nginx`</span>
+    ),
+},
+
+<span style=color:#a6e22e>fetchOpts</span><span style=color:#f92672>:</span> {
+  <span style=color:#a6e22e>repo</span>: <span style=color:#66d9ef>config</span>
+    .<span style=color:#a6e22e>requireSecret</span>(<span style=color:#e6db74>&#39;chartmuseumPass&#39;</span>)
+    .<span style=color:#a6e22e>apply</span>(
+      (<span style=color:#a6e22e>password</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#e6db74>`https://</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>config</span>.<span style=color:#66d9ef>require</span>(<span style=color:#e6db74>&#39;chartmuseumUser&#39;</span>)<span style=color:#e6db74>}</span><span style=color:#e6db74>:</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>password</span><span style=color:#e6db74>}</span><span style=color:#e6db74>@charts.vanderveer.be/chartmuseum`</span>
+    ),
+},
+</code></pre></div><p>Running <code>pulumi up</code> again should result in no changes, because the charts are the same, only the storage location is different.</p><p>As a last task, we do not want to run <code>pulumi up</code> by hand anymore, let&rsquo;s add this to the GitHub actions as well. Create an <code>AWS_ACCESS_KEY_ID</code>, <code>AWS_REGION</code>, <code>AWS_SECRET_ACCESS_KEY</code> and <code>PULUMI_ACCESS_TOKEN</code> secret in Github first to matech the values we put in the Pulumi config and your Pulumi account.</p><p>Add the following at the end of <code>branch.yml</code>.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>infra</span>:
+  <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+  <span style=color:#f92672>needs</span>: <span style=color:#ae81ff>charts</span>
+  <span style=color:#f92672>steps</span>:
+    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Checkout</span>
+      <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v2</span>
+
+    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Configure AWS Credentials</span>
+      <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>aws-actions/configure-aws-credentials@v1</span>
+      <span style=color:#f92672>with</span>:
+        <span style=color:#f92672>aws-access-key-id</span>: <span style=color:#ae81ff>${{ secrets.AWS_ACCESS_KEY_ID }}</span>
+        <span style=color:#f92672>aws-region</span>: <span style=color:#ae81ff>${{ secrets.AWS_REGION }}</span>
+        <span style=color:#f92672>aws-secret-access-key</span>: <span style=color:#ae81ff>${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
+
+    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Use Node.js 14</span>
+      <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/setup-node@v1</span>
+      <span style=color:#f92672>with</span>:
+        <span style=color:#f92672>node-version</span>: <span style=color:#ae81ff>14</span>
+
+    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Install pulumi</span>
+      <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>pulumi/action-install-pulumi-cli@v1.0.1</span>
+
+    - <span style=color:#f92672>run</span>: <span style=color:#ae81ff>npm install</span>
+
+    - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>pulumi/actions@v2</span>
+      <span style=color:#f92672>env</span>:
+        <span style=color:#f92672>PULUMI_ACCESS_TOKEN</span>: <span style=color:#ae81ff>${{ secrets.PULUMI_ACCESS_TOKEN }}</span>
+      <span style=color:#f92672>with</span>:
+        <span style=color:#f92672>command</span>: <span style=color:#ae81ff>up</span>
+        <span style=color:#f92672>stack-name</span>: <span style=color:#ae81ff>chartmuseum</span>
+</code></pre></div><p>And commit and push to GitHub. Wait for it to complete and you are done&mldr;</p></div></div><div style=margin-top:5em><div id=disqus_thread></div><script type=application/javascript>var disqus_config=function(){};(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('disqus_thread').innerHTML='Disqus comments not available by default when the website is previewed locally.';return}var b=document,a=b.createElement('script');a.async=!0,a.src='//roderikvanderveer.disqus.com/embed.js',a.setAttribute('data-timestamp',+new Date),(b.head||b.body).appendChild(a)})()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div></div></div><footer class=footer><div class=footer__inner><div class="copyright copyright--user"><span>&copy 2021</span>
 <span>:: Theme made by <a href=https://twitter.com/panr>panr</a></span></div></div></footer><script src=https://vanderveer.be/assets/main.js></script><script src=https://vanderveer.be/assets/prism.js></script></div></body></html>
