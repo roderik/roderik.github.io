@@ -4,7 +4,7 @@ title = "vanderVeer.be"
 theme = "terminal"
 enableGitInfo = true
 enableRobotsTXT = true
-
+googleAnalytics = "UA-26890239-1"
 disqusShortname = "roderikvanderveer"
 
 [author]
