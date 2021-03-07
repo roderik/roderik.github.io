@@ -532,3 +532,5 @@ infra:
 ```
 
 And commit and push to GitHub. Wait for it to complete and you are done...
+
+[The completed code of this tutorial can be found here.](https://github.com/roderik/chartmuseum-tutorial)
