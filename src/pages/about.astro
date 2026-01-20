@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { AUTHOR, SOCIAL } from '../consts';
+---
+
+<BaseLayout title="About" description={`About ${AUTHOR.name}`}>
+  <div class="container">
+    <header class="page-header">
+      <h1>About</h1>
+    </header>
+
+    <div class="about-content">
+      <p class="lead">
+        I build things that make complex technology usable.
+      </p>
+
+      <p>
+        Co-founder & CTO at <a href="https://settlemint.com" target="_blank" rel="noopener">SettleMint</a>, where we've spent nine years making enterprise blockchain actually work. Before that: six years leading digital transformation at Kunstmaan, plus stints building data marketplaces and developer tools.
+      </p>
+
+      <p>
+        I write code, lead engineering teams, and obsess over developer experience. Currently deep into AI-assisted development workflows—figuring out how to make AI agents genuinely useful instead of just impressive in demos.
+      </p>
+
+      <p>
+        Based in Belgium. TypeScript, Kubernetes, and strong opinions about tooling.
+      </p>
+
+      <h2>Elsewhere</h2>
+
+      <p>
+        <a href={SOCIAL.twitter} target="_blank" rel="noopener">Twitter</a> ·
+        <a href={SOCIAL.linkedin} target="_blank" rel="noopener">LinkedIn</a> ·
+        <a href={SOCIAL.github} target="_blank" rel="noopener">GitHub</a> ·
+        <a href={`mailto:${AUTHOR.email}`}>{AUTHOR.email}</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    padding: 2rem 0 2rem;
+  }
+
+  .about-content {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+  }
+
+  .lead {
+    font-size: 1.5rem;
+    color: var(--color-text);
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+
+  .about-content h2 {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-light);
+    margin-top: 3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .about-content p:last-of-type a {
+    margin-right: 0.25rem;
+  }
+</style>
