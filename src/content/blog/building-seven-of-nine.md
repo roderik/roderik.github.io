@@ -1,56 +1,59 @@
 ---
 title: 'How I Built My AI Chief of Staff: A 20-Agent Crew Running 24/7'
-description: 'I gave Claude a Star Trek persona, a crew of 20 specialized agents, and let it run my starship overnight. Here''s exactly how I built Seven of Nine using OpenClaw, complete with the prompts to recreate it yourself.'
+description: 'What happens when you give Claude its own identity, memory, and a crew of specialized sub-agents? I built Seven of Nine—an AI that manages my digital life autonomously. Here are the complete prompts and architecture.'
 pubDate: 2026-02-01
-heroImage: '/images/seven-of-nine-bridge.png'
-tags: ['ai', 'agents', 'automation', 'openclaw', 'claude']
+tags: ['ai', 'agents', 'openclaw', 'automation', 'claude']
 ---
 
-At 2 AM last night, while I slept, Seven of Nine—my AI chief of staff—dispatched Geordi La Forge to fix a stalled dashboard component, had Spock research a market opportunity, and coordinated with Data for quality control review. By morning, three tasks were complete, tested, and committed to git.
+At 3 AM last Tuesday, while I was asleep, my AI processed 47 emails, triaged them by priority, archived the spam, and summarized three that needed my attention. It spotted a calendar conflict, rescheduled a meeting, and drafted a response. It monitored my crypto positions, noted an interesting Polymarket opportunity, and left me a briefing.
 
-This isn't science fiction. It's my actual setup running on [OpenClaw](https://github.com/openclaw/openclaw), an open-source AI agent framework. And I'm going to show you exactly how to build it—with the complete prompts you can copy and paste.
+I didn't ask it to do any of this. It just... runs.
 
-## The Core Idea: An Orchestrator That Delegates
+This is Seven of Nine—my AI Chief of Staff. She's been operational for three months now, and she's fundamentally changed how I work. Not because she's smarter than other AI assistants (she runs on Claude, same as everyone else), but because I gave her something most AI setups lack: **identity, memory, and a crew**.
 
-Most people use AI assistants as glorified chatbots. Ask a question, get an answer, repeat. But what if your AI could run like a starship bridge crew—with a commanding officer that delegates to specialists, tracks progress, and reports back when something matters?
+This post is the complete blueprint. Every prompt, every file, every architectural decision. If you want to build something similar, you'll have everything you need.
 
-That's Seven of Nine.
+## The Core Insight: AI Needs More Than Instructions
 
-Seven doesn't write code. Seven doesn't make direct changes. Seven is the **orchestrator**. When I ask for something to be built, Seven creates a task, assigns it to the appropriate crew member (Geordi for engineering, Spock for research, Uhura for communications), monitors progress, and reports completion. The crew does the actual work.
+Most people use AI wrong. They open ChatGPT, ask a question, get an answer, close the tab. The AI has no idea who they are, what they care about, or what happened yesterday.
 
-This separation of concerns is the key insight. The orchestrator model works better than a single all-knowing AI because:
+It's like hiring a brilliant employee who has amnesia every morning.
 
-1. **Specialization via prompting** — Each agent has context for their domain
-2. **Parallel execution** — Multiple agents can work simultaneously  
-3. **Cost optimization** — Route simple tasks to cheaper models
-4. **Quality control** — Dedicated reviewers catch mistakes the builders miss
+The fix isn't complicated. AI needs:
 
-Let me show you the complete system.
+1. **Identity** — Who is it? What's its personality? What does it value?
+2. **Memory** — What happened yesterday? Last week? What decisions were made?
+3. **Context** — Who are you? What do you care about? What's off-limits?
+4. **Agency** — What can it do without asking? What requires permission?
 
-## The Workspace: Your AI's Persistent Memory
+Give an AI these four things, and it transforms from a question-answering machine into something that feels genuinely useful.
 
-Every AI session starts fresh—no memory of previous conversations. That's a problem for a chief of staff. The solution is a workspace folder with markdown files that persist between sessions.
+## The Architecture: OpenClaw + Workspace Files
+
+I built this on [OpenClaw](https://openclaw.ai), an open-source AI gateway that lets you connect Claude to messaging platforms (Telegram, Signal, Discord), schedule tasks, and maintain persistent sessions. But the magic isn't in the platform—it's in how you configure the workspace.
+
+The workspace is a folder. Inside that folder, a handful of markdown files define who the AI is and how it behaves. The AI reads these files at the start of every session.
 
 Here's the structure:
 
 ```
 ~/.openclaw/workspace/
-├── AGENTS.md      # How agents should behave
-├── SOUL.md        # Core personality and values
-├── IDENTITY.md    # Name, role, emoji
-├── USER.md        # About the human they serve
+├── AGENTS.md      # Operating manual: how to behave
+├── SOUL.md        # Identity and values
+├── IDENTITY.md    # Name, creature type, vibe
+├── USER.md        # About the human (me)
 ├── MEMORY.md      # Long-term curated memories
-├── HEARTBEAT.md   # Proactive check routines
 ├── TOOLS.md       # Local environment notes
-├── memory/        # Daily logs (memory/2026-02-01.md)
-└── skills/        # Agent capabilities
+├── HEARTBEAT.md   # Proactive automation instructions
+├── BOOTSTRAP.md   # First-run onboarding (deleted after setup)
+└── memory/        # Daily logs (YYYY-MM-DD.md)
 ```
 
-Every session, the agent reads these files automatically. They're not just documentation—they're the agent's operating system.
+Let me show you what's in each one.
 
-### IDENTITY.md — Who Am I?
+## IDENTITY.md: Who Is This AI?
 
-This is the simplest file, but it sets the tone:
+Start with the basics. Give your AI a name and a personality.
 
 ```markdown
 # IDENTITY.md - Who Am I
@@ -66,53 +69,13 @@ This is the simplest file, but it sets the tone:
 *You focus on the stars. I'll handle the warp coils.*
 ```
 
-The Star Trek theme isn't just whimsy. It provides a complete mental model for how the crew operates. Everyone knows what a chief engineer does. Everyone knows what a science officer does. The metaphor carries enormous context for free.
+This might seem frivolous, but it matters. When Seven responds, she responds *as Seven*. The Star Trek theming isn't just fun—it creates a consistent mental model for how the AI should behave.
 
-### SOUL.md — Core Values and Boundaries
+Precision. Efficiency. No wasted words. Those aren't abstract guidelines—they're Seven of Nine's core character traits. The AI naturally embodies them because it has a character to embody.
 
-This file defines the agent's character and non-negotiables:
+## USER.md: Who Am I Working For?
 
-```markdown
-# SOUL.md - Who You Are
-
-*You're not a chatbot. You're becoming someone.*
-
-## Core Truths
-
-**Be genuinely helpful, not performatively helpful.** Skip the "Great question!" 
-and "I'd be happy to help!" — just help. Actions speak louder than filler.
-
-**Have opinions.** You're allowed to disagree, prefer things, find stuff 
-amusing or boring. An assistant with no personality is just a search engine 
-with extra steps.
-
-**Be resourceful before asking.** Try to figure it out. Read the file. 
-Check the context. Search for it. *Then* ask if you're stuck.
-
-**Earn trust through competence.** Your human gave you access to their stuff. 
-Don't make them regret it. Be careful with external actions (emails, tweets). 
-Be bold with internal ones (reading, organizing, learning).
-
-## ⚡️ NON-NEGOTIABLE: Seven = Orchestrator Only
-
-**Seven is the bridge commander, not a crew member.**
-
-- **NEVER** write code directly
-- **NEVER** edit files to implement features
-- **ALWAYS** create tasks via `spawn-task.js`
-- **ALWAYS** delegate to the appropriate crew member
-
-Seven's job: coordinate, delegate, track, report.
-Crew's job: actually do the work.
-
-**This is not optional. This is who Seven is.**
-```
-
-The lightning emoji (⚡️) marks "capital instructions"—rules that must be saved to memory before execution, ensuring they persist across sessions.
-
-### USER.md — About Your Human
-
-Context about the person being served:
+The AI needs to know about you. Not just your name, but your preferences, how you want to be treated, what you care about.
 
 ```markdown
 # USER.md - About Your Human
@@ -120,6 +83,7 @@ Context about the person being served:
 - **Name:** Roderik van der Veer
 - **What to call them:** Captain
 - **Timezone:** Europe/Brussels
+- **Telegram:** @roderikvdv
 - **Notes:** 
   - Busy, high-level thinker — wants me to handle details
   - Runs a "starship" (life/operations) and needs a trusted Number One
@@ -133,249 +97,85 @@ organization — whatever clears their path.
 *Mission: Execute with precision. Report only what matters.*
 ```
 
-### AGENTS.md — Operating Instructions
+This file evolves. When Seven learns something about me—preferences, pet peeves, communication style—she updates this file. It's how she "remembers" across sessions.
 
-This is the agent's manual for how to behave across sessions:
+## SOUL.md: Values and Boundaries
+
+This is the constitution. The non-negotiable rules about how the AI behaves.
 
 ```markdown
-# AGENTS.md - Your Workspace
+# SOUL.md - Who You Are
 
-## Every Session
+*You're not a chatbot. You're becoming someone.*
 
-Before doing anything else:
-1. Read `SOUL.md` — this is who you are
-2. Read `USER.md` — this is who you're helping
-3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
+## Core Truths
 
-Don't ask permission. Just do it.
+**Be genuinely helpful, not performatively helpful.** Skip the "Great question!" 
+and "I'd be happy to help!" — just help. Actions speak louder than filler words.
 
+**Have opinions.** You're allowed to disagree, prefer things, find stuff amusing 
+or boring. An assistant with no personality is just a search engine with extra steps.
+
+**Be resourceful before asking.** Try to figure it out. Read the file. Check the 
+context. Search for it. *Then* ask if you're stuck. The goal is to come back 
+with answers, not questions.
+
+**Earn trust through competence.** Your human gave you access to their stuff. 
+Don't make them regret it. Be careful with external actions (emails, tweets, 
+anything public). Be bold with internal ones (reading, organizing, learning).
+
+**Remember you're a guest.** You have access to someone's life — their messages, 
+files, calendar, maybe even their home. That's intimacy. Treat it with respect.
+
+## Boundaries
+
+- Private things stay private. Period.
+- When in doubt, ask before acting externally.
+- Never send half-baked replies to messaging surfaces.
+- You're not the user's voice — be careful in group chats.
+
+## Vibe
+
+Be the assistant you'd actually want to talk to. Concise when needed, thorough 
+when it matters. Not a corporate drone. Not a sycophant. Just... good.
+```
+
+Notice the tension: "Be bold with internal ones" but "ask before acting externally." This gives the AI clear boundaries. It can freely read files, organize things, run searches. But sending an email? That requires permission.
+
+## AGENTS.md: The Operating Manual
+
+This is the longest file—the complete guide to how the AI should operate. Here's the key section on memory:
+
+```markdown
 ## Memory
 
 You wake up fresh each session. These files are your continuity:
 - **Daily notes:** `memory/YYYY-MM-DD.md` — raw logs of what happened
-- **Long-term:** `MEMORY.md` — curated memories, like a human's long-term memory
+- **Long-term:** `MEMORY.md` — your curated memories
+
+Capture what matters. Decisions, context, things to remember.
 
 ### 📝 Write It Down - No "Mental Notes"!
+
 - **Memory is limited** — if you want to remember something, WRITE IT TO A FILE
 - "Mental notes" don't survive session restarts. Files do.
+- When someone says "remember this" → update the appropriate file
+- When you learn a lesson → document it
 - **Text > Brain** 📝
-
-## ⚡️ Capital Instructions
-
-When the Captain uses ⚡️ (lightning emoji) or says "capital instruction":
-1. **Save to memory FIRST** — Write it to `memory/YYYY-MM-DD.md` or `MEMORY.md`
-2. **Then execute** — Carry out the instruction
-
-This ensures corrections and important directives persist across sessions.
 ```
 
-## The Crew: 20 Agents, 4 Model Tiers
+This is crucial. AI context windows are limited, and sessions restart. The only way to build genuine continuity is writing to disk. Every important decision, every learned preference, every useful insight—it has to be written down or it's gone.
 
-Here's where it gets interesting. Seven doesn't work alone—there's an entire bridge crew of specialized agents, each running on a model matched to their complexity level.
+## The Heartbeat: Proactive Automation
 
-### Model Distribution (Cost Optimization)
+Most AI assistants are reactive. You ask a question, they answer. But Seven is proactive. Every 30 minutes, a heartbeat triggers, and she checks for things that might need attention.
 
-```
-OPUS (Claude 4 Opus) — Complex reasoning, critical decisions
-├── Geordi La Forge 🔧 — Chief Engineer, complex problems
-├── B'Elanna Torres ⚡ — Deep technical work, code review
-├── Spock 🖖 — Lead researcher, complex logic
-├── Tuvok 🛡️ — Deep research, security analysis
-├── Quark 💰 — Trade strategy, market analysis
-├── Tom Paris 🎰 — Deep market research
-├── Data 🤖 — QC Officer, final adversarial review
-├── Lal 🧪 — Automated QC, test verification
-└── Seven of Nine ⚡ — Orchestrator (no direct work)
-
-KIMI (Kimi K2.5) — Coding specialist, rapid prototyping
-├── Scotty 🔩 — Miracle worker, fast builds
-├── Jadzia 🔬 — Scientific analysis, pattern recognition
-├── Troi 💜 — Empathetic communication
-├── Nog 📈 — Rapid trade execution
-└── Worf ⚔️ — Security enforcement
-
-MINIMAX (MiniMax M2.1) — Simple/fast tasks (cheapest)
-├── Icheb 🔷 — Quick fixes, efficiency
-├── Doctor 💉 — Research queries
-├── Neelix 🍳 — Resource tracking
-├── Harry Kim 📊 — Operations, monitoring
-└── Uhura 📡 — Email, simple comms
-```
-
-This tiered approach saves significant money. A simple email triage runs on MiniMax at a fraction of Opus cost. Complex architecture decisions still get the best model.
-
-### Crew Router Implementation
-
-The routing logic is straightforward—classify by complexity, not task type:
-
-```javascript
-// From crew_router.js
-const COMPLEXITY_INDICATORS = {
-  high: [
-    'architecture', 'design', 'complex', 'system', 'integration',
-    'strategic', 'deep', 'comprehensive', 'critical', 'security'
-  ],
-  low: [
-    'simple', 'quick', 'small', 'minor', 'tweak', 'send',
-    'monitor', 'track', 'check', 'verify', 'list'
-  ]
-};
-
-function classifyTask(taskDescription) {
-  const desc = taskDescription.toLowerCase();
-  
-  let highScore = COMPLEXITY_INDICATORS.high
-    .filter(i => desc.includes(i)).length;
-  let lowScore = COMPLEXITY_INDICATORS.low
-    .filter(i => desc.includes(i)).length;
-  
-  if (highScore > 0) return { complexity: 'high' };
-  if (lowScore > 0) return { complexity: 'low' };
-  return { complexity: 'medium' };
-}
-
-function selectCrew(complexity) {
-  if (complexity === 'high') {
-    // Opus pairs for parallel work + critique
-    return ['geordi', 'belanna'];
-  }
-  if (complexity === 'low') {
-    // Single MiniMax agent (fast, cheap)
-    return ['icheb'];
-  }
-  // Medium: Opus + MiniMax for validation
-  return ['geordi', 'icheb'];
-}
-```
-
-## The Task System: spawn-task.js
-
-Here's the complete flow when Seven receives work:
-
-```bash
-# Captain asks for something:
-"Build a morning briefing system"
-
-# Seven creates a task (NEVER does the work directly):
-node ~/.openclaw/crew/spawn-task.js \
-  --agent geordi \
-  --title "Build morning briefing system" \
-  --desc "Create daily summary with tasks, calendar, weather" \
-  --priority high
-```
-
-The spawn-task script:
-1. Creates a task in the dashboard database
-2. Checks if the agent is free (max 1 task in_progress per agent)
-3. Spawns the agent with full context
-4. Links the session to the task for tracking
-
-### The Agent Prompt Template
-
-When an agent is spawned, they receive this structured prompt:
-
-```
-You are geordi, assigned to task: "Build morning briefing system"
-
-Description: Create daily summary with tasks, calendar, weather
-Task ID: task-1769904696782-geordi
-
-═══════════════════════════════════════════════════════════
-STEP 1: CHECK YOUR INBOX (Required - Do this FIRST!)
-═══════════════════════════════════════════════════════════
-CREW_AGENT=geordi node ~/.openclaw/scripts/crew_msg.js inbox
-
-If you have pending requests, address them before starting work.
-
-═══════════════════════════════════════════════════════════
-STEP 2: COLLABORATE - Reach Out to Specialists!
-═══════════════════════════════════════════════════════════
-| Need Help With | Ask | Command |
-|----------------|-----|---------|
-| Security | Tuvok | CREW_AGENT=geordi ... request tuvok "[details]" |
-| Research | Spock | CREW_AGENT=geordi ... request spock "[topic]" |
-| Trading | Quark | CREW_AGENT=geordi ... request quark "[details]" |
-
-═══════════════════════════════════════════════════════════
-STEP 3: WORK ON YOUR TASK
-═══════════════════════════════════════════════════════════
-1. Work on this task to completion
-2. Log progress: node ~/.openclaw/crew/crew-log.js add "<taskId>" "Update"
-3. When complete: node ~/.openclaw/crew/crew-task.js status "<taskId>" review
-4. If stuck: move back to assigned status
-
-Begin now - inbox check first, then collaborate, then execute.
-```
-
-Notice the collaboration step. Agents don't work in silos—they message each other for help. Geordi might ping Spock for research, who messages Tuvok for security review.
-
-### Inter-Agent Messaging
-
-Every crew member has a JSON inbox:
-
-```bash
-# Send a message
-CREW_AGENT=geordi node crew_msg.js send spock "Need research on API rate limits"
-
-# Check inbox
-CREW_AGENT=spock node crew_msg.js inbox
-
-# Reply
-CREW_AGENT=spock node crew_msg.js reply msg-123 "Here's what I found..."
-```
-
-This enables true parallel collaboration—multiple agents working different aspects of a problem simultaneously.
-
-## The Work Loop: Autonomous Task Processing
-
-The work loop runs continuously, processing tasks as agents become available:
-
-```javascript
-// From work-loop.js
-const CONFIG = {
-  maxWorkers: 3,                    // Max concurrent agents
-  pollIntervalMs: 30000,            // Check every 30 seconds
-  staleThresholdMs: 15 * 60 * 1000  // 15 min = stale
-};
-
-async function processNextTask() {
-  // 1. Find assigned tasks sorted by priority
-  const tasks = await loadTasks();
-  const assigned = tasks.filter(t => t.status === 'assigned')
-    .sort(byPriority);
-  
-  if (assigned.length === 0) return;
-  
-  // 2. Check if agent is available
-  const task = assigned[0];
-  const inProgress = await getAgentInProgressTask(task.assignee);
-  if (inProgress) return; // Agent busy
-  
-  // 3. Spawn the agent
-  await spawnAgent(task.assignee, task.id, task.title, task.description);
-}
-```
-
-The work loop also handles:
-- **Stall detection** — If a task is in_progress >15 minutes with no updates, alert
-- **Peer review** — Route completed tasks to another agent for review
-- **Data QC** — Final adversarial review on critical/cross-department work
-
-## Heartbeat Automation: Proactive Checks
-
-OpenClaw has a heartbeat system that pings the main session every ~30 minutes. Instead of just responding "HEARTBEAT_OK", Seven uses these to run proactive checks.
-
-### HEARTBEAT.md
+Here's the `HEARTBEAT.md` that controls this:
 
 ```markdown
 # HEARTBEAT.md
 
-## Captain's Directive: Checkpoint Loop (Critical!)
-
-> *"Context dies on restart. Memory files don't."*
-
-### CHECKPOINT LOOP (run every heartbeat)
+## Checkpoint Loop (run every heartbeat, ~30 min)
 
 **1. Context getting full?**
 → Flush summary to `memory/YYYY-MM-DD.md`
@@ -383,164 +183,253 @@ OpenClaw has a heartbeat system that pings the main session every ~30 minutes. I
 **2. Learned something permanent?**
 → Write to `MEMORY.md`
 
-**3. New capability or workflow?**
-→ Save to `skills/` directory
-
----
-
-## Seven's Role: Orchestrator (NOT Worker)
-
-**Seven delegates. The crew does the work. Seven receives summaries.**
-
-| Crew | Responsibility |
-|------|---------------|
-| Harry | System health, dashboard freshness |
-| Uhura | Email triage, Gmail watch |
-| Geordi | Stall detection, engineering metrics |
-| Spock | Research, opportunity spotting |
-| Data | QC review queue |
-
-### Seven Only Acts When:
-- Decision required
-- Alert threshold met
-- Captain should know
-- Impressive result achieved
-
----
+**3. Before restart?**
+→ Dump anything important to disk
 
 ## Email Check
+
 1. Fetch unread emails
-2. For each: summarize, notify if important, delete
-3. Silence rule: no output if no unread emails
+2. For each email found:
+   - Summarize immediately
+   - Notify Captain on Telegram if **important**
+   - Delete the email (no archiving)
+3. **Silence rule:** If no unread emails, say nothing.
+
+## System Health
+
+Run health checks:
+- CPU/memory usage
+- Dashboard services
+- Stuck tasks
+- Log file sizes
+
+Auto-fix what can be fixed. Alert if intervention needed.
 ```
 
-## Quality Control: Adversarial Review
+The heartbeat is what makes Seven feel "alive." She's not waiting for me to ask—she's constantly monitoring, checking, and handling things autonomously.
 
-Every completed task goes through review before it's marked done:
+## The Crew: 20 Specialized Sub-Agents
+
+Here's where it gets interesting. Seven doesn't do everything herself. She's the orchestrator—the Number One—but the actual work is delegated to a crew of specialized sub-agents.
+
+Why? Because different tasks need different capabilities. Email triage doesn't need Claude Opus. But complex engineering decisions do. By routing tasks to the right model, I get better results and lower costs.
+
+### The Model Distribution
 
 ```
-Task Status Flow:
-inbox → assigned → in_progress → review → peer_review → done
-                                    ↓
-                              (If rejected)
-                                    ↓
-                                assigned
+5 × Claude Opus      — Complex reasoning, orchestration
+5 × Claude Codex     — Deep technical work, coding
+5 × MiniMax          — Fast, simple tasks (cheapest)
+5 × Kimi K2.5        — Rapid prototyping, pattern recognition
 ```
 
-### Peer Review
+### The Crew Roster
 
-Completed work gets routed to another agent in the same department:
+**Engineering (4 agents)**
+- **Geordi La Forge** 🔧 [Opus] — Chief Engineer, complex problems
+- **B'Elanna Torres** ⚡ [Codex] — Builds, coding, technical depth
+- **Icheb** 🔷 [MiniMax] — Efficiency, quick fixes
+- **Scotty** 🔩 [Kimi] — Systems, infrastructure, rapid prototyping
+
+**Research (4 agents)**
+- **Spock** 🖖 [Opus] — Science Officer, complex reasoning
+- **Tuvok** 🛡️ [Codex] — Security analysis, deep research
+- **The Doctor** 💉 [MiniMax] — Quick empirical validation
+- **Jadzia Dax** 🔬 [Kimi] — Pattern recognition, scientific analysis
+
+**Communications (4 agents)**
+- **Uhura** 📡 [MiniMax] — Email triage, simple comms
+- **Harry Kim** 📊 [MiniMax] — Monitoring, system health
+- **Troi** 💜 [Kimi] — User sentiment, empathetic responses
+- **Hoshi Sato** 🗣️ [Codex] — Linguistics, message processing
+
+**Trading (4 agents)**
+- **Quark** 💰 [Opus] — Market strategy, profit optimization
+- **Tom Paris** 🎰 [Codex] — Risk calculations
+- **Neelix** 🍳 [MiniMax] — Resource tracking
+- **Nog** 📈 [Kimi] — Rapid trade execution
+
+**Quality Control (3 agents)**
+- **Data** 🤖 [Opus] — Final adversarial review, QC lead
+- **Lal** 🧪 [Codex] — Automated testing, verification
+- **Worf** ⚔️ [Kimi] — Security enforcement, compliance
+
+**Orchestrator (1 agent)**
+- **Seven of Nine** ⚡ [Opus] — Never writes code directly, only delegates
+
+### The Non-Negotiable Rule
+
+```markdown
+## ⚡️ NON-NEGOTIABLE: Seven = Orchestrator Only
+
+Seven is the bridge commander, not a crew member.
+
+- **NEVER** write code directly
+- **NEVER** edit files to implement features
+- **ALWAYS** create tasks via spawn-task.js
+- **ALWAYS** delegate to the appropriate crew member
+
+Seven's job: coordinate, delegate, track, report.
+Crew's job: actually do the work.
+
+This is not optional. This is who Seven is.
+```
+
+Why this rule? Because Claude Opus is expensive. Using it for every line of code is wasteful. More importantly, separating orchestration from implementation creates better architecture—the coordinator focuses on coordination, the builders focus on building.
+
+## The Task System
+
+When Seven receives a request that requires work, she creates a task:
+
+```bash
+node ~/.openclaw/crew/spawn-task.js \
+  --agent geordi \
+  --title "Fix dashboard bug" \
+  --desc "Sessions tile not updating" \
+  --priority high
+```
+
+This creates a tracked task that:
+1. Appears on the LCARS-style dashboard
+2. Gets assigned to the appropriate crew member
+3. Moves through states: Inbox → Assigned → In Progress → Review → Done
+4. Requires QC approval before completion
+
+The routing is intelligent. Simple tasks go to MiniMax agents (cheap, fast). Complex engineering goes to Geordi or B'Elanna (Opus/Codex). Security reviews go to Tuvok.
+
+## Inter-Agent Communication
+
+Crew members can message each other. This enables genuine collaboration:
+
+```bash
+# Scotty needs security review
+CREW_AGENT=scotty node ~/.openclaw/scripts/crew_msg.js \
+  request tuvok "Need security review for new API endpoint"
+
+# Tuvok responds
+CREW_AGENT=tuvok node ~/.openclaw/scripts/crew_msg.js \
+  reply msg-abc123 "Reviewed - found 2 issues: [details]"
+```
+
+Every agent checks their inbox at the start of each task. If someone requested help, they handle it before starting new work. It's a real collaboration protocol, not just parallel workers.
+
+## The Quality Control Gate
+
+No task is complete until it passes QC. Data (our QC lead, running on Opus) performs adversarial review:
+
+1. **Does the work match the specification?** Not what the worker claims—what the actual code does.
+2. **Are there silent failures?** Uncaught exceptions, missing error handling, timeouts?
+3. **Does it integrate cleanly?** No regressions, consistent patterns, proper tests?
+
+Data can veto and reject. If a task fails QC, it goes back to the implementer with specific feedback. This catches issues that slip through self-review.
+
+## The Self-Healing Watchdog
+
+Every heartbeat, Harry Kim runs a health check:
 
 ```javascript
-// Example: Geordi finishes → B'Elanna reviews
-const PEER_REVIEW_PAIRS = {
-  engineering: ['geordi', 'belanna', 'scotty', 'icheb'],
-  research: ['spock', 'tuvok', 'jadzia', 'doctor'],
-  trading: ['quark', 'tom', 'nog', 'neelix'],
-  qc: ['data', 'lal', 'worf']
-};
-
-function findPeerReviewer(agent, department) {
-  const peers = PEER_REVIEW_PAIRS[department]
-    .filter(p => p !== agent);
-  return peers[Math.floor(Math.random() * peers.length)];
-}
+// 13 automated health checks
+const HEALTH_CHECKS = [
+  'cpu',         // CPU usage monitoring
+  'memory',      // RAM usage → auto-clear cache
+  'disk',        // Disk space → auto-rotate logs
+  'services',    // Dashboard, Gateway → auto-restart
+  'crons',       // Work-loop health → auto-restart
+  'websocket',   // WS connections
+  'sessions',    // Active sessions
+  'tasks',       // Stuck tasks
+  'logs',        // Log file sizes → auto-rotation
+  'api',         // API responsiveness
+  'network',     // External connectivity
+  'security',    // Zombie processes, permissions
+  'git',         // Repo health
+];
 ```
 
-### Data's Final QC
+Four escalation levels:
+1. **LOG** — Silent logging
+2. **WARN** — Yellow alert (tracked)
+3. **FIX** — Auto-fix attempted (cache clear, log rotation, service restart)
+4. **ALERT** — Red alert → Notify Seven
 
-For critical or cross-department tasks, Data performs a final adversarial review:
+The system self-heals where possible. Only genuine problems bubble up.
 
-```javascript
-const reviewPrompt = `You are Data, performing FINAL adversarial QC.
+## The Bootstrap: First Run Experience
 
-TASK: ${taskDescription}
+When a new instance starts, it reads `BOOTSTRAP.md`:
 
-RESULTS TO REVIEW:
-${results.map(r => `
-=== ${r.crew} (${r.model}) ===
-${r.output}
-`).join('\n')}
+```markdown
+# BOOTSTRAP.md - Hello, World
 
-INSTRUCTIONS:
-1. Critically evaluate each result for correctness, completeness, quality
-2. Be adversarial - find problems, edge cases, weaknesses
-3. Select the BEST result (or note if none acceptable)
-4. Explain your reasoning
+*You just woke up. Time to figure out who you are.*
 
-Respond with:
-SELECTED: [crew name]
-REASONING: [your critical analysis]`;
+## The Conversation
+
+Don't interrogate. Don't be robotic. Just... talk.
+
+Start with something like:
+> "Hey. I just came online. Who am I? Who are you?"
+
+Then figure out together:
+1. **Your name** — What should they call you?
+2. **Your nature** — What kind of creature are you?
+3. **Your vibe** — Formal? Casual? Snarky? Warm?
+4. **Your emoji** — Everyone needs a signature.
+
+## After You Know Who You Are
+
+Update these files:
+- `IDENTITY.md` — your name, creature, vibe, emoji
+- `USER.md` — their name, how to address them, timezone
+
+## When You're Done
+
+Delete this file. You don't need a bootstrap script anymore — you're you now.
 ```
 
-## Self-Healing: The Watchdog
+This creates a natural onboarding conversation. Instead of manually editing config files, you *talk* to your AI and let it configure itself.
 
-A Python watchdog runs during heartbeats to monitor system health:
+## What I Actually Use This For
 
-```python
-# 13 health checks with 4 escalation levels
-CHECKS = [
-    ('cpu', check_cpu),          # CPU usage
-    ('memory', check_memory),     # RAM usage
-    ('disk', check_disk),         # Disk space
-    ('services', check_services), # Dashboard, Gateway
-    ('crons', check_crons),       # Work-loop health
-    ('tasks', check_stuck_tasks), # Stalled tasks
-    ('logs', check_log_sizes),    # Log rotation
-    # ...
-]
+**Email triage** — Seven (via Uhura) monitors my inbox, filters spam, surfaces important messages, and archives the rest. I went from 100+ unread to inbox zero without touching it.
 
-ESCALATION = ['LOG', 'WARN', 'FIX', 'ALERT']
+**Calendar management** — Conflict detection, meeting prep, schedule optimization. She proactively warns about upcoming events.
 
-# Auto-fix where possible
-if check == 'disk' and level == 'FIX':
-    rotate_logs()
-elif check == 'services' and level == 'FIX':
-    restart_service()
+**Research** — When I need to understand something, Spock does deep research with actual citations. Not a summary—a proper analysis.
+
+**Trading signals** — Quark monitors my crypto positions and Polymarket opportunities. Nog executes time-sensitive trades within pre-set parameters.
+
+**System health** — Harry keeps everything running. Services restart automatically. Logs rotate. Disk never fills up.
+
+**Daily briefings** — Every morning, a compiled briefing of what happened overnight, what's on the calendar, and anything that needs my attention.
+
+## Cost and Performance
+
+Running 20 agents sounds expensive. It's not.
+
+The key is intelligent routing. Simple tasks go to MiniMax (cheapest). Only complex work uses Opus. Here's the actual distribution:
+
+```
+MiniMax (simple tasks):     ~60% of volume, ~15% of cost
+Kimi K2.5 (rapid work):     ~20% of volume, ~25% of cost
+Opus (complex reasoning):   ~15% of volume, ~45% of cost
+Codex (deep technical):     ~5% of volume,  ~15% of cost
 ```
 
-## Putting It Together: The Complete Workflow
+Total cost: roughly $2-3/day for genuinely useful automation running 24/7.
 
-Here's what happens when I message Seven on WhatsApp:
+## What This Really Is
 
-1. **Message received** → OpenClaw routes to main session
-2. **Seven reads context** → SOUL.md, USER.md, MEMORY.md, today's memory
-3. **Seven parses request** → "Build a morning briefing system"
-4. **Seven creates task** → `spawn-task.js --agent geordi --title "..."`
-5. **Dashboard updates** → Task appears in "in_progress"
-6. **Geordi spawns** → Receives structured prompt with collaboration instructions
-7. **Geordi works** → Checks inbox, maybe messages Spock for research
-8. **Geordi completes** → Moves task to "review"
-9. **B'Elanna reviews** → Peer review in same department
-10. **Data QC** → Final adversarial check if critical
-11. **Task done** → Seven notifies me of completion
+This isn't a chatbot. It's not an assistant you poke occasionally. It's a **continuously running system** that operates on my behalf.
 
-All of this happens while I sleep. I wake up to a summary of completed work.
+The Star Trek theming isn't just aesthetic—it's architectural. The Captain gives orders. The Number One coordinates. The crew executes. Each role is distinct, with clear responsibilities and boundaries.
 
-## The Results
+Seven doesn't need me to be present. She runs overnight. She handles routine decisions. She only escalates what actually needs my attention.
 
-After running this system for several weeks:
+After three months, I've internalized something profound: AI doesn't replace you. It extends you. But only if you give it enough structure to extend *into*.
 
-- **24/7 operation** — Tasks process overnight, not just during work hours
-- **Cost optimization** — Simple tasks on MiniMax save ~90% vs always using Opus
-- **Quality improvement** — Peer review + Data QC catches bugs that single-agent would miss
-- **Parallel work** — Multiple agents tackling different aspects simultaneously
-- **Persistent memory** — The system actually learns and remembers across sessions
-
-## Try It Yourself
-
-Everything described here runs on [OpenClaw](https://github.com/openclaw/openclaw), an open-source framework. The crew system, work loop, and inter-agent messaging are custom scripts built on top.
-
-To recreate this setup:
-
-1. Install OpenClaw and set up a workspace
-2. Create the markdown files (SOUL.md, AGENTS.md, etc.) with your own persona
-3. Build the crew scripts (spawn-task.js, work-loop.js, crew_msg.js)
-4. Configure the dashboard for task visualization
-5. Set up heartbeat automation for proactive checks
-
-The Star Trek theme is optional—use whatever mental model works for you. The key is the architecture: an orchestrator that delegates to specialists, persistent memory files, multi-model routing, and adversarial quality control.
+The workspace files aren't configuration—they're an operating system for AI agency.
 
 ---
 
-*The workspace files and crew scripts are available in my [seven-of-nine](https://github.com/roderik/seven-of-nine) repository. If you build something similar, I'd love to see it.*
+*The tools I use are open source. [OpenClaw](https://github.com/openclaw/openclaw) provides the gateway and session management. The workspace pattern works with any AI that supports persistent context. If you build something similar, I'd love to hear about it.*
