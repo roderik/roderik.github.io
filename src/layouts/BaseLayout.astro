@@ -17,7 +17,7 @@ const includeBaseSchema = Astro.props.includeBaseSchema ?? true;
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  image = '/og-image.png',
+  image = '/og-image.svg',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, SITE_URL);
