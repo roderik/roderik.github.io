@@ -1,0 +1,31 @@
+---
+/**
+ * BreadcrumbSchema.astro - Breadcrumb navigation structured data
+ * Generates BreadcrumbList schema from an array of breadcrumb items
+ */
+import { SITE_URL } from '../consts';
+
+interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": items.map((item, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": item.name,
+    "item": item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`
+  }))
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema, null, 2)} />

@@ -1,0 +1,76 @@
+---
+interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+// Always start with Home
+const breadcrumbs = [
+  { name: 'Home', url: '/' },
+  ...items,
+];
+---
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    {breadcrumbs.map((item, index) => (
+      <li>
+        {index < breadcrumbs.length - 1 ? (
+          <>
+            <a href={item.url}>{item.name}</a>
+            <span class="separator" aria-hidden="true">/</span>
+          </>
+        ) : (
+          <span aria-current="page">{item.name}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .breadcrumbs {
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+  }
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-accent);
+  }
+
+  .separator {
+    color: var(--color-text-light);
+    margin: 0 0.25rem;
+  }
+
+  span[aria-current="page"] {
+    color: var(--color-text);
+    font-weight: 500;
+  }
+</style>

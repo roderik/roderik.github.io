@@ -1,0 +1,38 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c0a09"/>
+      <stop offset="100%" style="stop-color:#1c1917"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d9488"/>
+      <stop offset="100%" style="stop-color:#2dd4bf"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Accent line -->
+  <rect x="80" y="200" width="100" height="4" fill="url(#accent)"/>
+  
+  <!-- Name -->
+  <text x="80" y="280" font-family="Georgia, serif" font-size="64" font-weight="500" fill="#fafaf9">
+    Roderik van der Veer
+  </text>
+  
+  <!-- Title -->
+  <text x="80" y="350" font-family="-apple-system, sans-serif" font-size="32" fill="#a8a29e">
+    Co-founder &amp; CTO at SettleMint
+  </text>
+  
+  <!-- Topics -->
+  <text x="80" y="430" font-family="-apple-system, sans-serif" font-size="24" fill="#78716c">
+    Blockchain · AI Development · Enterprise Software
+  </text>
+  
+  <!-- URL -->
+  <text x="80" y="550" font-family="monospace" font-size="20" fill="#0d9488">
+    vanderveer.be
+  </text>
+</svg>

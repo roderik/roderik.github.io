@@ -1,0 +1,41 @@
+---
+interface Props {
+  content: string;
+  wordsPerMinute?: number;
+}
+
+const { content, wordsPerMinute = 200 } = Astro.props;
+
+// Strip HTML/markdown and count words
+const text = content
+  .replace(/<[^>]*>/g, '')
+  .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+  .replace(/`[^`]+`/g, '') // Remove inline code
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Convert links to text
+  .replace(/[#*_~]/g, ''); // Remove markdown formatting
+
+const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
+const minutes = Math.ceil(wordCount / wordsPerMinute);
+---
+
+<span class="reading-time">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+  {minutes} min read
+</span>
+
+<style>
+  .reading-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+</style>

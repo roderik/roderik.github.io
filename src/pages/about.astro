@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { AUTHOR, SOCIAL } from '../consts';
+import { AUTHOR, SOCIAL, PAGE_DESCRIPTIONS } from '../consts';
 ---
 
-<BaseLayout title="About" description={`About ${AUTHOR.name}`}>
+<BaseLayout title="About" description={PAGE_DESCRIPTIONS.about}>
   <div class="container">
     <header class="page-header">
       <h1>About</h1>

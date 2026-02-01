@@ -2,18 +2,22 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SchemaOrg from '../components/SchemaOrg.astro';
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from '../consts';
 
 interface Props {
   title?: string;
   description?: string;
   image?: string;
+  includeBaseSchema?: boolean;
 }
+
+const includeBaseSchema = Astro.props.includeBaseSchema ?? true;
 
 const {
   title = SITE_TITLE,
   description = SITE_DESCRIPTION,
-  image = '/og-image.png',
+  image = '/og-image.svg',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, SITE_URL);
@@ -57,6 +61,9 @@ const fullTitle = title === SITE_TITLE ? title : `${title} | ${SITE_TITLE}`;
     <link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={new URL('/rss.xml', SITE_URL)} />
 
     <meta name="generator" content={Astro.generator} />
+    
+    <!-- Structured Data -->
+    {includeBaseSchema && <SchemaOrg />}
   </head>
   <body>
     <Header />

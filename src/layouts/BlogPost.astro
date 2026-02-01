@@ -1,7 +1,9 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import FormattedDate from '../components/FormattedDate.astro';
-import { AUTHOR } from '../consts';
+import ArticleSchema from '../components/ArticleSchema.astro';
+import BreadcrumbSchema from '../components/BreadcrumbSchema.astro';
+import { AUTHOR, SITE_URL } from '../consts';
 
 interface Props {
   title: string;
@@ -12,9 +14,31 @@ interface Props {
 }
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+
+// Extract slug from URL path
+const slug = Astro.url.pathname.replace(/^\/blog\//, '').replace(/\/$/, '');
+
+// Breadcrumb items
+const breadcrumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Blog', url: '/blog/' },
+  { name: title, url: `/blog/${slug}/` }
+];
 ---
 
 <BaseLayout title={title} description={description} image={heroImage}>
+  <!-- Article Schema -->
+  <ArticleSchema
+    title={title}
+    description={description}
+    pubDate={pubDate}
+    updatedDate={updatedDate}
+    heroImage={heroImage}
+    slug={slug}
+  />
+  
+  <!-- Breadcrumb Schema -->
+  <BreadcrumbSchema items={breadcrumbs} />
   <article class="container">
     <header class="post-header">
       <div class="post-meta">
