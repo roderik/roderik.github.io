@@ -2,12 +2,13 @@
 title: 'How I Built My AI Chief of Staff: A 20-Agent Crew Running 24/7'
 description: 'I gave Claude a Star Trek persona, a crew of 20 specialized agents, and let it run my starship overnight. Here''s exactly how I built Seven of Nine using OpenClaw, complete with the prompts to recreate it yourself.'
 pubDate: 2026-02-01
-tags: ['ai', 'agents', 'automation', 'openclaw']
+heroImage: '/images/seven-of-nine-bridge.png'
+tags: ['ai', 'agents', 'automation', 'openclaw', 'claude']
 ---
 
 At 2 AM last night, while I slept, Seven of Nine—my AI chief of staff—dispatched Geordi La Forge to fix a stalled dashboard component, had Spock research a market opportunity, and coordinated with Data for quality control review. By morning, three tasks were complete, tested, and committed to git.
 
-This isn't science fiction. It's my actual setup running on OpenClaw, an open-source AI agent framework. And I'm going to show you exactly how to build it.
+This isn't science fiction. It's my actual setup running on [OpenClaw](https://github.com/openclaw/openclaw), an open-source AI agent framework. And I'm going to show you exactly how to build it—with the complete prompts you can copy and paste.
 
 ## The Core Idea: An Orchestrator That Delegates
 

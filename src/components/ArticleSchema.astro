@@ -1,0 +1,49 @@
+---
+/**
+ * ArticleSchema.astro - Structured data for blog posts
+ * Implements Article/BlogPosting schema with proper author/publisher linking
+ */
+import { SITE_URL, AUTHOR } from '../consts';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  heroImage?: string;
+  slug: string;
+}
+
+const { title, description, pubDate, updatedDate, heroImage, slug } = Astro.props;
+
+const articleUrl = `${SITE_URL}/blog/${slug}/`;
+const imageUrl = heroImage ? new URL(heroImage, SITE_URL).toString() : `${SITE_URL}/og-image.png`;
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "@id": `${articleUrl}#article`,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": articleUrl
+  },
+  "headline": title,
+  "description": description,
+  "image": imageUrl,
+  "datePublished": pubDate.toISOString(),
+  ...(updatedDate && { "dateModified": updatedDate.toISOString() }),
+  "author": {
+    "@id": `${SITE_URL}/#person`
+  },
+  "publisher": {
+    "@id": `${SITE_URL}/#person`
+  },
+  "isPartOf": {
+    "@id": `${SITE_URL}/#website`
+  },
+  "inLanguage": "en-US",
+  "wordCount": 1500 // Estimated, could be calculated from content
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(articleSchema, null, 2)} />

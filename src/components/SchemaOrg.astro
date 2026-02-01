@@ -1,0 +1,76 @@
+---
+/**
+ * SchemaOrg.astro - Base structured data for the entire site
+ * Includes: WebSite, Organization, Person schemas
+ */
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL, AUTHOR, SOCIAL } from '../consts';
+
+interface Props {
+  type?: 'website' | 'article';
+}
+
+const { type = 'website' } = Astro.props;
+
+// Person schema - Roderik as author and CTO
+const personSchema = {
+  "@type": "Person",
+  "@id": `${SITE_URL}/#person`,
+  "name": AUTHOR.name,
+  "email": AUTHOR.email,
+  "description": AUTHOR.bio,
+  "url": SITE_URL,
+  "image": `${SITE_URL}/roderik.jpg`,
+  "jobTitle": "Co-founder & CTO",
+  "worksFor": {
+    "@id": `${SITE_URL}/#organization`
+  },
+  "sameAs": [
+    SOCIAL.github,
+    SOCIAL.twitter,
+    SOCIAL.linkedin
+  ]
+};
+
+// Organization schema - SettleMint
+const organizationSchema = {
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
+  "name": "SettleMint",
+  "url": "https://settlemint.com",
+  "logo": "https://settlemint.com/logo.png",
+  "description": "Making blockchain accessible and scalable for any organization.",
+  "founder": {
+    "@id": `${SITE_URL}/#person`
+  },
+  "sameAs": [
+    "https://github.com/settlemint",
+    "https://twitter.com/settaboris",
+    "https://linkedin.com/company/settlemint"
+  ]
+};
+
+// WebSite schema - for the blog itself
+const websiteSchema = {
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  "url": SITE_URL,
+  "name": SITE_TITLE,
+  "description": SITE_DESCRIPTION,
+  "publisher": {
+    "@id": `${SITE_URL}/#person`
+  },
+  "inLanguage": "en-US"
+};
+
+// Combine into graph
+const schemaGraph = {
+  "@context": "https://schema.org",
+  "@graph": [
+    personSchema,
+    organizationSchema,
+    websiteSchema
+  ]
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaGraph, null, 2)} />
