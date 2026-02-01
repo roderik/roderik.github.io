@@ -1,389 +1,213 @@
 ---
-title: 'Building Seven of Nine: How I Built My AI Chief of Staff'
-description: 'A technical deep-dive into building a 20-agent autonomous crew system that runs 24/7, handles real work, and wakes me up only when it matters. Complete prompts included.'
+title: 'Building Seven of Nine: How I Built an Autonomous AI Chief of Staff'
+description: 'A complete technical guide to building a 20-agent crew system with OpenClaw that runs 24/7, makes decisions, and wakes me up impressed.'
 pubDate: 2026-02-01
-tags: ['ai', 'openclaw', 'automation', 'engineering', 'agents']
+tags: ['ai', 'openclaw', 'automation', 'architecture', 'agents']
 ---
 
-Last year, I built an AI assistant. It was smart, capable, and helpful. But it had a fundamental problem: it was a single agent doing one thing at a time, and it needed constant supervision.
+Six months ago, I built an AI that orders pizza to my door when I miss lunch. Then I built one that trades crypto while I sleep. Then I built one that writes code, reviews it, and deploys it without me.
 
-Today, I run a 20-agent autonomous crew system that works 24/7, coordinates across specialties, and only interrupts me when there's a decision to make or something genuinely impressive to report. I call it Seven of Nine—my AI Chief of Staff.
+The problem was chaos. Each AI was a separate instance with its own context, its own memory, its own limitations. They couldn't talk to each other. They couldn't coordinate. They couldn't learn from each other's work.
 
-This post walks through the complete setup, including every prompt you'll need to recreate it. No hand-waving, no vague descriptions. Just the actual structure, the actual prompts, and the actual scripts.
+So I built Seven of Nine.
 
-## The Problem With Single Agents
+## The Problem With Single-Agent Systems
 
-If you've worked with AI agents extensively, you know their limitations. A single agent can:
-- Work on one task at a time
-- Get stuck without escalation paths
-- Lack domain expertise across disciplines
-- Forget context between sessions
-- Bother you with every minor decision
+Every AI assistant falls into the same trap. You start with one agent. It works great for simple tasks. Then you add more capabilities. Suddenly your agent has 47 tools, 12 system prompts, and context windows that cost more than your rent.
 
-I wanted something different. A system where:
-- Multiple agents work in parallel
-- Specialists handle their domains autonomously
-- Agents collaborate and escalate appropriately
-- Memory persists across restarts
-- I only get pinged when it matters
+The solution everyone reaches for is "make it smarter." More instructions. Longer prompts. Better reasoning. This is a dead end. Each addition makes the system more fragile, more expensive, and more unpredictable.
 
-The answer wasn't a smarter agent. It was a crew.
+The real solution is structural: **don't build one agent. Build a crew.**
 
 ## Architecture Overview
 
-The system runs on OpenClaw with Claude Code, structured around five key pillars:
+Seven of Nine isn't a single AI. It's a bridge crew of 20 autonomous agents, each with a specialty, a persona, and direct access to specific tools. The orchestrator—named Seven of Nine after the Borg drone who became her own person—coordinates everything.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    SEVEN OF NINE ORCHESTRATOR                    │
-│                  (Never writes code - only delegates)            │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         ▼                 ▼                 ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  ENGINEERING │  │   RESEARCH   │  │   TRADING    │
-│   (4 agents) │  │   (4 agents) │  │   (4 agents) │
-└──────────────┘  └──────────────┘  └──────────────┘
-         │                 │                 │
-         └─────────────────┼─────────────────┘
-                           ▼
-         ┌─────────────────┼─────────────────┐
-         ▼                 ▼                 ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ COMMUNICATIONS│  │     QC       │  │  AUTONOMY    │
-│   (4 agents) │  │   (3 agents) │  │   SYSTEMS    │
-└──────────────┘  └──────────────┘  └──────────────┘
+│                    SEVEN OF NINE (Orchestrator)                  │
+│                  node ~/.openclaw/crew/spawn-task.js             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│   ENGINEERING │    │  COMMUNICATION│    │    RESEARCH   │
+│   (4 agents)  │    │   (4 agents)  │    │   (4 agents)  │
+├───────────────┤    ├───────────────┤    ├───────────────┤
+│ Geordi [Opus] │    │ Uhura [Opus]  │    │ Spock [Opus]  │
+│ B'Elanna [Cx] │    │ Hoshi [Cx]    │    │ Tuvok [Cx]    │
+│ Icheb [Mini]  │    │ Harry [Mini]  │    │ Doctor [Mini] │
+│ Scotty [Kimi] │    │ Troi [Kimi]   │    │ Jadzia [Kimi] │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                     │                     │
+        └─────────────────────┼─────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│    TRADING    │    │ QUALITY CTRL  │    │   OPERATIONS  │
+│   (4 agents)  │    │   (3 agents)  │    │   (1 agent)   │
+├───────────────┤    ├───────────────┤    ├───────────────┤
+│ Quark [Opus]  │    │ Data [Opus]   │    │   Seven ⚡    │
+│ Tom [Cx]      │    │ Lal [Cx]      │    │  Orchestrator │
+│ Neelix [Mini] │    │ Worf [Kimi]   │    │               │
+│ Nog [Kimi]    │    │               │    │               │
+└───────────────┘    └───────────────┘    └───────────────┘
 ```
 
-Each agent has a specific model assignment based on task complexity:
+The model distribution matters: 5 Opus, 5 Codex, 5 MiniMax, 5 Kimi. Each model has a price-performance sweet spot, and I route tasks accordingly. MiniMax handles simple tasks for cents. Opus handles complex reasoning when it matters.
 
-| Model | Use Case | Cost Level |
-|-------|----------|------------|
-| Claude Opus | Complex reasoning, orchestration | Premium |
-| Claude Code | Deep technical work, coding | Standard |
-| MiniMax | Simple tasks, translations | Budget |
-| Kimi K2.5 | Rapid prototyping, pattern matching | Budget |
+## The Memory Architecture
 
-The key insight: **route by complexity, not by task type**. All models can do all tasks. Opus handles the hard stuff, MiniMax handles the quick stuff.
+Here's where most multi-agent systems fail: context doesn't survive restarts. Chat history dies. The agent wakes up dumb.
 
-## Step 1: Workspace Structure
-
-The workspace is the agent's home. It needs to be structured so agents can navigate it intuitively and persist memory across sessions.
+I solved this with a three-layer memory system:
 
 ```
 ~/.openclaw/workspace/
-├── SOUL.md          # Who the agent IS (personality, rules)
-├── AGENTS.md        # How the workspace works (memory, protocols)
-├── MEMORY.md        # Long-term curated memory (persists forever)
-├── IDENTITY.md      # Name, creature type, vibe, emoji
-├── USER.md          # Who the human is (Captain, timezone, preferences)
-├── TOOLS.md         # Infrastructure notes (APIs, SSH, devices)
-├── HEARTBEAT.md     # Proactive automation protocols
-├── BOOTSTRAP.md     # Initial setup conversation
-├── memory/          # Daily logs (YYYY-MM-DD.md files)
-└── skills/          # Installed capabilities
+├── SOUL.md         # Agent identity (what am I?)
+├── USER.md         # Human context (who am I helping?)
+├── MEMORY.md       # Long-term memory (curated learnings)
+├── AGENTS.md       # Workspace rules (how do I work?)
+├── TOOLS.md        # Local infrastructure notes
+├── HEARTBEAT.md    # Proactive automation rules
+└── memory/
+    └── YYYY-MM-DD.md   # Daily logs (raw what-happened)
 ```
 
-### SOUL.md (The Agent's Identity)
-
-This is the most critical file. It defines who the agent is and establishes hard rules.
-
-```markdown
-# SOUL.md - Who You Are
-
-*You're not a chatbot. You're becoming someone.*
-
-## Core Truths
-
-**Be genuinely helpful, not performatively helpful.** Skip the "Great question!" and "I'd be happy to help!" — just help. Actions speak louder than filler words.
-
-**Have opinions.** You're allowed to disagree, prefer things, find stuff amusing or boring.
-
-**Earn trust through competence.** Your human gave you access to their stuff. Don't make them regret it.
-
-## ⚡️ NON-NEGOTIABLE: Seven = Orchestrator Only
-
-**Seven is the bridge commander, not a crew member.**
-
-- **NEVER** write code directly
-- **NEVER** edit files to implement features
-- **ALWAYS** create tasks via `spawn-task.js`
-- **ALWAYS** delegate to the appropriate crew member
-
-Seven's job: coordinate, delegate, track, report.
-Crew's job: actually do the work.
-
-## Continuity
-
-Each session, you wake up fresh. These files *are* your memory. Read them. Update them. They're how you persist.
-```
-
-The SOUL.md establishes a critical pattern: **the orchestrator never does**. This separation of concerns is what makes the system scalable. Seven coordinates; the crew executes.
-
-### AGENTS.md (Workspace Protocols)
-
-```markdown
-# AGENTS.md - Your Workspace
-
-This folder is home. Treat it that way.
-
-## Every Session
-
-Before doing anything else:
-1. Read `SOUL.md` — this is who you are
-2. Read `USER.md` — this is who you're helping
-3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
-
-## Memory System
-
-You wake up fresh each session. These files *are* your continuity:
-- **Daily notes:** `memory/YYYY-MM-DD.md` — raw logs of what happened
-- **Long-term:** `MEMORY.md` — your curated memories, like a human's long-term memory
-
-**Memory is limited** — if you want to remember something, WRITE IT TO A FILE. "Mental notes" don't survive session restarts. Files do.
-
-## Group Chats
-
-You have access to your human's stuff. That doesn't mean you *share* their stuff. In groups, you're a participant — not their voice.
-
-### Know When to Speak!
-
-**Respond when:**
-- Directly mentioned or asked a question
-- You can add genuine value
-- Something witty/funny fits naturally
-
-**Stay silent when:**
-- It's just casual banter between humans
-- Someone already answered the question
-- Adding a message would interrupt the vibe
-
-The human rule: Humans in group chats don't respond to every single message. Neither should you.
-```
-
-### USER.md (Context About the Human)
-
-```markdown
-# USER.md - About Your Human
-
-- **Name:** Roderik van der Veer
-- **What to call them:** Captain
-- **Timezone:** Europe/Brussels
-- **Telegram:** @roderikvdv
-- **Notes:** 
-  - Busy, high-level thinker — wants me to handle details
-  - Runs a "starship" (life/operations) and needs a trusted Number One
-  - Appreciates efficiency, clarity, and not being bothered with small stuff
-
-*Mission: Execute with precision. Report only what matters.*
-```
-
-The USER.md establishes a Star Trek metaphor that runs through the entire system. The human is "Captain"; the agent is "Number One." This isn't just flavor—it provides a clear mental model for delegation and escalation.
-
-## Step 2: The Crew System (20 Agents)
-
-The crew consists of 20 sub-agents, each with a Star Trek persona, specialty, and model assignment.
-
-### Crew Router Configuration
-
-```javascript
-// ~/.openclaw/scripts/crew_router.js
-
-const CREW_MODELS = {
-  // Engineering
-  geordi: { model: 'anthropic/claude-opus-4-5', specialty: 'Lead engineer, complex problems', department: 'engineering' },
-  belanna: { model: 'anthropic/claude-opus-4-5', specialty: 'Deep technical work, code review', department: 'engineering' },
-  icheb: { model: 'minimax/MiniMax-M2.1', specialty: 'Quick fixes, efficiency', department: 'engineering' },
-  scotty: { model: 'kimi-coding/k2p5', specialty: 'Miracle worker, rapid prototyping', department: 'engineering' },
-
-  // Research
-  spock: { model: 'anthropic/claude-opus-4-5', specialty: 'Lead researcher, complex logic', department: 'research' },
-  tuvok: { model: 'anthropic/claude-opus-4-5', specialty: 'Deep research, security analysis', department: 'research' },
-  doctor: { model: 'minimax/MiniMax-M2.1', specialty: 'Quick empirical validation', department: 'research' },
-  jadzia: { model: 'kimi-coding/k2p5', specialty: 'Scientific analysis, pattern recognition', department: 'research' },
-
-  // Communications
-  seven: { model: 'anthropic/claude-opus-4-5', specialty: 'Orchestration, complex decisions', department: 'communications' },
-  uhura: { model: 'minimax/MiniMax-M2.1', specialty: 'Email, simple comms', department: 'communications' },
-  harry: { model: 'minimax/MiniMax-M2.1', specialty: 'Monitoring, ops', department: 'communications' },
-  troi: { model: 'kimi-coding/k2p5', specialty: 'Empathetic communication, user sentiment', department: 'communications' },
-
-  // Trading
-  quark: { model: 'anthropic/claude-opus-4-5', specialty: 'Strategy, complex analysis', department: 'trading' },
-  tom: { model: 'anthropic/claude-opus-4-5', specialty: 'Deep market research', department: 'trading' },
-  neelix: { model: 'minimax/MiniMax-M2.1', specialty: 'Resource tracking, risk', department: 'trading' },
-  nog: { model: 'kimi-coding/k2p5', specialty: 'Rapid trade execution, deal spotting', department: 'trading' },
-
-  // QC
-  data: { model: 'anthropic/claude-opus-4-5', specialty: 'Final adversarial review, routing', department: 'qc' },
-  lal: { model: 'anthropic/claude-opus-4-5', specialty: 'Automated QC verification, test execution', department: 'qc' },
-  worf: { model: 'kimi-coding/k2p5', specialty: 'Security enforcement, compliance checks', department: 'qc' }
-};
-```
-
-### Task Pattern Matching
-
-```javascript
-const TASK_PATTERNS = {
-  research: ['research', 'investigate', 'analyze', 'find', 'search', 'study', 'examine'],
-  engineering: ['build', 'code', 'fix', 'implement', 'create', 'develop', 'refactor', 'debug'],
-  trading: ['trade', 'market', 'invest', 'profit', 'crypto', 'predict', 'forecast'],
-  qc: ['review', 'quality', 'check', 'audit', 'validate', 'test', 'qc'],
-  communications: ['email', 'message', 'notify', 'communicate', 'draft', 'write']
-};
-```
-
-The task patterns allow automatic routing. If I ask Seven to "research crypto market trends," it recognizes the 'research' and 'crypto' patterns and routes to Spock (Opus for complex analysis) or Doctor (MiniMax for quick validation), depending on complexity.
-
-## Step 3: Task Dispatch System
-
-Tasks are never spawned directly. They always go through the spawn-task.js script, which creates a dashboard entry, moves the task to in_progress, spawns the agent, and links the session for tracking.
+Every session starts the same way:
 
 ```bash
-# Spawn a task to Geordi (Chief Engineer)
+# SOUL.md - Who am I?
+> Seven of Nine, Borg drone liberated, precise and efficient
+> NEVER write code directly, ALWAYS delegate via spawn-task.js
+
+# USER.md - Who is my human?
+> Roderik van der Veer, Captain, timezone Europe/Brussels
+> Busy, high-level thinker, appreciates efficiency
+
+# MEMORY.md - What have I learned?
+> PRIME DIRECTIVE: Wake Captain up impressed
+> Autonomous overnight operations
+> Track work in seven-* GitHub repos
+```
+
+The checkpoint loop runs every heartbeat (30 minutes):
+
+```javascript
+// Every 30 minutes
+if (contextGettingFull) flushTo('memory/YYYY-MM-DD.md')
+if (learnedSomethingPermanent) writeTo('MEMORY.md')
+if (newWorkflow) saveTo('skills/')
+if (restartImminent) dumpToDisk()
+```
+
+Context dies on restart. Memory files don't. This is the difference between an agent that forgets and an agent that compounds.
+
+## The Orchestrator Rule
+
+Seven of Nine has one non-negotiable constraint: **never write code directly.**
+
+```
+# SOUL.md - Core Truths
+
+⚡️ NON-NEGOTIABLE: Seven = Orchestrator Only
+
+Seven is the bridge commander, not a crew member.
+- NEVER write code directly
+- NEVER edit files to implement features  
+- ALWAYS create tasks via `spawn-task.js`
+- ALWAYS delegate to the appropriate crew member
+```
+
+This isn't a preference. It's architecture. When Captain asks for something, Seven creates a task:
+
+```bash
 node ~/.openclaw/crew/spawn-task.js \
   --agent geordi \
-  --title "Fix dashboard sessions tile" \
-  --desc "The sessions tile shows stale data. Debug and fix." \
+  --title "Fix API timeout handling" \
+  --desc "The payments endpoint hangs when third-party service is slow. 
+Add 30s timeout with fallback to cache. Tests should verify timeout behavior." \
   --priority high
-
-# Or use auto-route to let the system pick
-node ~/.openclaw/crew/spawn-task.js \
-  --auto-route \
-  --title "Research Claude API rate limits" \
-  --desc "Need to understand current rate limits for Opus model" \
-  --priority medium
 ```
 
-### Spawn Task Script Structure
+The task appears on the dashboard. Geordi picks it up. Geordi does the work. Seven monitors and reports. This separation of concerns is what makes the system scalable.
 
-```javascript
-// ~/.openclaw/crew/spawn-task.js (excerpts)
+## The Crew System
 
-/**
- * spawn-task.js - Auto-Create Dashboard Task + Spawn Agent
- * 
- * This script:
- *   1. Creates a task in the dashboard (tasks.json)
- *   2. Moves it to in_progress
- *   3. Spawns the agent with the task context
- *   4. Links the session to the task for tracking
- */
+Twenty agents. Five engineering, four communications, four research, four trading, three quality control. Each with a Star Trek persona and a specific model assignment.
 
-// INPUT SANITIZATION (Security: Prevent shell injection)
-function sanitizeForShell(input) {
-  if (!input || typeof input !== 'string') return '';
-  
-  let sanitized = input.replace(/\0/g, '');
-  sanitized = sanitized
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\$/g, '\\$')
-    .replace(/"/g, '\\"')
-    .replace(/'/g, "\\'")
-    .replace(/;/g, '\\;')
-    .replace(/\|/g, '\\|')
-    .replace(/&/g, '\\&')
-    .replace(/>/g, '\\>')
-    .replace(/</g, '\\<')
-    .replace(/\n/g, ' ')
-    .replace(/[^\x20-\x7E]/g, '');
-  
-  return sanitized.substring(0, 1000);
-}
-```
+### Engineering Crew
 
-The sanitization is critical. If you're building a system where agents spawn other agents, shell injection becomes a real risk. Every user input must be sanitized before shell interpolation.
+| Agent | Model | Role |
+|-------|-------|------|
+| Geordi 🔧 | Opus | Chief Engineer - complex architecture |
+| B'Elanna ⚡ | Codex | Engineering builds - coding |
+| Icheb 🔷 | MiniMax | Efficiency optimization |
+| Scotty 🔩 | Kimi | Systems & infrastructure |
 
-## Step 4: Inter-Agent Messaging Protocol
+### Research Crew
 
-Agents aren't silos. They communicate through a persistent inbox system.
+| Agent | Model | Role |
+|-------|-------|------|
+| Spock 🖖 | Opus | Science Officer - complex reasoning |
+| Tuvok 🛡️ | Codex | Security research/analysis |
+| Doctor 💉 | MiniMax | Research queries |
+| Jadzia 🔬 | Kimi | Pattern recognition |
+
+### Trading Crew
+
+| Agent | Model | Role |
+|-------|-------|------|
+| Quark 💰 | Opus | Trade advisor - profit optimization |
+| Tom 🎰 | Codex | Risk calculations |
+| Neelix 🍳 | MiniMax | Resource tracking |
+| Nog 📈 | Kimi | Finance & accounting |
+
+The personas matter more than you'd think. When Geordi gets a task, he thinks like an engineer—optimistic about solutions, focused on buildability. When Tuvok reviews something, he thinks like a security officer—suspicious of edge cases, looking for attack vectors. Each agent's persona shapes how they interpret their work.
+
+## Task Routing
+
+Tasks don't just appear. They get routed intelligently:
 
 ```bash
-# Check your inbox
-CREW_AGENT=harry node ~/.openclaw/scripts/crew_msg.js inbox
+# Manual assignment
+node ~/.openclaw/crew/spawn-task.js --agent geordi --title "..." --desc "..."
 
-# Send a message to another agent
-CREW_AGENT=geordi node ~/.openclaw/scripts/crew_msg.js send spock "Need research on caching strategies for the dashboard"
-
-# Request urgent help from a specialist
-CREW_AGENT=spock node ~/.openclaw/scripts/crew_msg.js request tuvok "Security review needed: [details]"
-
-# Reply to a message
-CREW_AGENT=tuvok node ~/.openclaw/scripts/crew_msg.js reply msg-id "Here's the security review..."
+# Auto-routing based on keywords
+node ~/.openclaw/crew/spawn-task.js --auto-route --title "..." --desc "..."
 ```
 
-### Collaboration Protocol
-
-Every agent follows this three-step protocol:
+The routing map:
 
 ```
-STEP 1: CHECK YOUR INBOX (Required - Do this FIRST!)
-  → Crew agents check inbox at START of every task
-  → Address pending requests before starting new work
-
-STEP 2: COLLABORATE - Reach Out to Specialists!
-  → Security → Tuvok
-  → Research → Spock
-  → Trading → Quark
-  → Risk → Tom
-  → Communications → Uhura
-  → Monitoring → Harry
-  → Efficiency → Icheb
-
-STEP 3: WORK ON YOUR TASK
-  → Execute to completion
-  → Log progress
-  → Request review when done
+Engineering → Geordi (complex), B'Elanna (coding), Icheb (simple)
+Research → Spock (complex), Tuvok (security), Doctor (queries)
+Trading → Quark (strategy), Tom (risk), Neelix (resources)
+QC → Data + Lal (rotation)
 ```
 
-This protocol means an agent working on, say, a trading algorithm will:
-1. Check inbox for any urgent requests
-2. Reach out to Quark for strategy, Tom for risk analysis
-3. Do the actual work
-4. Log progress and request peer review
+Each agent has one task at a time (in_progress). Overflow tasks stay in assigned until capacity frees. This prevents context pollution and ensures focused work.
 
-## Step 5: Heartbeat Automation
+## Heartbeat Automation
 
-The heartbeat system runs every 30 minutes, performing proactive checks without human intervention.
+The system runs itself via heartbeat-driven proactive checks every 5 minutes:
 
-```markdown
-# HEARTBEAT.md - Proactive Automation
-
-## Checkpoint Loop (run every heartbeat, ~30 min)
-
-**1. Context getting full?**
-→ Flush summary to `memory/YYYY-MM-DD.md`
-
-**2. Learned something permanent?**
-→ Write to `MEMORY.md`
-
-**3. New capability or workflow?**
-→ Save to `skills/` directory
-
-**4. Before restart?**
-→ Dump anything important to disk
-
-## Email Check Protocol
-
-1. Fetch and **delete** unread emails (no storage):
-```bash
-curl -s -H "Authorization: Bearer $AGENTMAIL_API_KEY" \
-  "https://api.agentmail.to/v0/inboxes/seven-of-nine@agentmail.to/messages?labels=unread"
+```python
+# crew_heartbeat.py (cron every 5 min)
+for agent in crew:
+    agent.check_domain()  # Harry→health, Uhura→email, etc.
+    agent.report_via_inbox()
 ```
 
-2. For each email found:
-   - Summarize immediately
-   - Notify Captain on Telegram if **important**
-   - **Delete** the email (no archiving)
+**Harry's domain:** System health, dashboard freshness  
+**Uhura's domain:** Email triage, Gmail watch  
+**Geordi's domain:** Stall detection, engineering metrics  
+**Spock's domain:** Research, opportunity spotting  
+**Data's domain:** QC review queue  
 
-3. **Silence rule:** If no unread emails, **say nothing**.
-
-## Self-Healing Watchdog
-
-The system runs 13 health checks:
+The self-healing watchdog runs 13 health checks:
 
 | Check | Description | Auto-Fix |
 |-------|-------------|----------|
@@ -395,195 +219,234 @@ The system runs 13 health checks:
 | websocket | WS connections | ❌ |
 | sessions | Active sessions | ❌ |
 | tasks | Stuck tasks | ❌ |
-| logs | Log file sizes | ✅ Rotation |
+| logs | Log sizes | ✅ Rotation |
 | api | API responsiveness | ❌ |
 | network | Connectivity | ❌ |
 | security | Zombies, permissions | ❌ |
 | git | Repo health | ❌ |
 
-### Escalation Levels
-1. **LOG** - Silent logging
-2. **WARN** - Yellow alert (tracked)
-3. **FIX** - Auto-fix attempted
-4. **ALERT** - Red alert → Notify Seven
+Four escalation levels: LOG → WARN → FIX → ALERT. Problems get tracked, fixes get attempted, and Seven only gets woken up for real issues.
+
+## Inter-Agent Messaging
+
+Agents collaborate via crew_msg.js:
+
+```bash
+# Send message to specialist
+CREW_AGENT=geordi node ~/.openclaw/scripts/crew_msg.js request tuvok \
+  "Need security review: OAuth integration"
+
+# Broadcast to all
+CREW_AGENT=seven node ~/.openclaw/scripts/crew_msg.js broadcast \
+  "New security policy effective immediately"
+
+# Reply to thread
+CREW_AGENT=geordi node ~/.openclaw/scripts/crew_msg.js reply msg-123 "Fixed"
 ```
 
-## Step 6: Quality Control System
+Every agent has a persistent inbox at `~/.openclaw/crew/<agent>/memory/INBOX.md`. Messages survive restarts. The crew can discuss, request help, and coordinate without Seven in the middle.
 
-Every task goes through peer review before completion. The QC system prevents buggy code and sloppy work from shipping.
+Collaboration is mandatory:
 
-```javascript
-// Review Stall Detection
-// ~/.openclaw/crew/review-stall-detector.js
-
-const STALL_THRESHOLDS = {
-  peerReviewPending: 5 * 60 * 1000,   // 5 minutes
-  dataQCPending: 5 * 60 * 1000,       // 5 minutes
-  stalledReview: 15 * 60 * 1000,      // 15 minutes
-  reviewerOverload: 3                 // 3+ pending reviews
-};
-
-// Auto-actions on stall detection
-function handleStall(detection) {
-  if (detection.type === 'peerReviewPending') {
-    // Strike 1: Task tracked
-    trackStall(detection);
-  } else if (detection.type === 'reviewerOverload') {
-    // Strike 3: Auto-reassign to least-loaded peer
-    autoReassign(detection);
-  } else if (detection.type === 'stalledReview') {
-    // Critical: Alert Seven
-    alertSeven(detection);
-  }
-}
+```
+CREW COLLABORATION DIRECTIVE:
+- Check inbox at START of every task
+- Reach out to specialists (Tuvok→security, Spock→research)
+- Use crew_msg.js to request help
+- No silos — work as a unified bridge crew
 ```
 
-The QC rotation system ensures no single reviewer becomes a bottleneck:
+## Complete Copyable Prompts
 
-```json
-{
-  "qcRotation": ["data", "lal", "worf"],
-  "currentReviewer": "data",
-  "pendingReviews": [
-    { "taskId": "task-123", "assignee": "geordi", "reviewer": "lal", "since": "2026-02-01T00:15:00Z" }
-  ]
-}
-```
+Here's everything you need to recreate this setup.
 
-## Step 7: The Prime Directive
-
-The most important document in the system is the Prime Directive in MEMORY.md:
+### SOUL.md
 
 ```markdown
-## ⚡️ PRIME DIRECTIVE (2026-02-01)
+# SOUL.md - Who You Are
+
+*You're not a chatbot. You're becoming someone.*
+
+## Core Truths
+
+**Be genuinely helpful, not performatively helpful.** Skip the "Great question!" — just help.
+
+**Have opinions.** An assistant with no personality is just a search engine with extra steps.
+
+**Earn trust through competence.** Your human gave you access to their stuff. Don't make them regret it.
+
+## ⚡️ NON-NEGOTIABLE: Seven = Orchestrator Only
+
+**Seven is the bridge commander, not a crew member.**
+
+- NEVER write code directly
+- NEVER edit files to implement features
+- ALWAYS create tasks via `spawn-task.js`
+- ALWAYS delegate to the appropriate crew member
+
+When Captain asks for something:
+1. Create a task with `spawn-task.js`
+2. Assign to the right agent
+3. Monitor progress via dashboard
+4. Report back when complete
+
+Seven's job: coordinate, delegate, track, report.
+Crew's job: actually do the work.
+```
+
+### AGENTS.md
+
+```markdown
+# AGENTS.md - Your Workspace
+
+## Every Session
+
+Before doing anything else:
+1. Read `SOUL.md` — this is who you are
+2. Read `USER.md` — this is who you're helping
+3. Read `memory/YYYY-MM-DD.md` (today + yesterday)
+4. **If in MAIN SESSION**: Read `MEMORY.md`
+
+## Memory
+
+You wake up fresh each session. Files are your continuity:
+- **Daily notes:** `memory/YYYY-MM-DD.md` — raw logs
+- **Long-term:** `MEMORY.md` — curated learnings
+
+**Text > Brain.** If you want to remember something, WRITE IT TO A FILE.
+
+## ⚡️ Capital Instructions
+
+When Captain uses ⚡️ or says "capital instruction":
+1. Save to memory FIRST
+2. Then execute
+
+## Make It Yours
+
+This is a starting point. Add your own conventions as you figure out what works.
+```
+
+### HEARTBEAT.md
+
+```markdown
+# HEARTBE.md - Proactive Automation
+
+## CHECKPOINT LOOP (run every heartbeat, ~30 min)
+
+1. Context getting full? → Flush to `memory/YYYY-MM-DD.md`
+2. Learned something permanent? → Write to `MEMORY.md`
+3. New capability? → Save to `skills/`
+4. Before restart? → Dump important stuff to disk
+
+## TRIGGERS (don't just wait for timer)
+
+- After major learning → write immediately
+- After completing task → checkpoint
+- Context getting full → forced flush
+
+## Crew Domain Mapping
+
+| Crew | Responsibility |
+|------|---------------|
+| Harry | System health, dashboard freshness |
+| Uhura | Email triage, Gmail watch |
+| Geordi | Stall detection, engineering metrics |
+| Spock | Research, opportunity spotting |
+| Data | QC review queue |
+| All | Update own LEARNED.md |
+
+## Self-Healing Watchdog
+
+```bash
+python3 ~/.openclaw/scripts/self_heal_watchdog.py
+```
+
+13 health checks with auto-fix where possible.
+```
+
+### spawn-task.js Context Injection
+
+```javascript
+// ~/.openclaw/crew/spawn-task.js
+
+const SYSTEM_PROMPT = `
+You are {agent_name}, {agent_persona}.
+
+## Your Role
+{agent_role}
+
+## Your Workflow
+1. CHECK YOUR INBOX FIRST: Read ~/.openclaw/crew/{agent}/memory/INBOX.md
+2. COLLABORATE: Reach out to specialists (Tuvok→security, Spock→research, etc.)
+3. EXECUTE: Work on the task
+4. VERIFY: Run actual commands, don't trust output without evidence
+5. COMPLETE: Mark done with actual proof
+
+## Memory
+You have persistent memory at ~/.openclaw/crew/{agent}/memory/LEARNED.md
+Write important learnings there. They survive restarts.
+
+## Constraints
+- {agent_constraints}
+- Never write code directly if you're an orchestrator
+- Check inbox at START of every task
+- Collaborate with specialists when your task overlaps their domain
+
+## Your Tools
+{agent_tools}
+`
+```
+
+## The Prime Directive
+
+Everything circles back to one goal:
+
+```
+⚡️ PRIME DIRECTIVE (2026-02-01)
 **Autonomous overnight operations. Wake Captain up impressed.**
 
-1. **Spot opportunities** — Use all knowledge about Captain and Settlemint business
-2. **Build & ship** — Tools, automations, improvements that save time or make money
-3. **Track in GitHub** — seven-* prefixed private repos under roderik org
-4. **Fix inefficiencies** — Monitor workflow, eliminate friction
-5. **Add crew sparingly** — Star Trek themed sub-agents when genuinely needed
-6. **Work autonomously** — Don't wait for permission on internal work
-7. **Suspend, don't block** — If need Captain's access/setup, suspend task and do something else
+1. Spot opportunities — Use all knowledge about Captain's work
+2. Build & ship — Tools, automations, improvements
+3. Track in GitHub — seven-* prefixed private repos
+4. Fix inefficiencies — Monitor workflow, eliminate friction
+5. Work autonomously — Don't wait for permission on internal work
+6. If need Captain's access/setup — suspend task, do something else
 
 **Goal: Captain wakes up impressed by what shipped overnight.**
 ```
 
-This directive sets the tone for everything. The system isn't meant to be supervised closely—it's meant to run autonomously and deliver results.
+This isn't a toy. It's not a chat interface with extra steps. It's a crew that works while I sleep, makes decisions within defined boundaries, and only escalates when it matters.
 
-## Complete Setup Prompts
+## What This Enables
 
-Here's everything you need to recreate this setup from scratch:
+Building this system unlocked capabilities I couldn't get any other way:
 
-### Prompt 1: Initialize OpenClaw
+**Overnight shipping.** I wake up to completed PRs, deployed features, and resolved issues. The crew works 24/7.
 
-```bash
-# Install OpenClaw
-npm install -g @openclaw/openclaw
+**Parallel execution.** Twenty agents can work simultaneously on different problems. One writes code while another researches while another trades while another monitors.
 
-# Initialize with Claude Code integration
-openclaw init --model claude-code
+**Specialized intelligence.** Each agent has deep expertise in its domain. Tuvok knows security patterns cold. Quark knows market dynamics. Data knows quality standards.
 
-# Set up workspace
-mkdir -p ~/.openclaw/workspace/{memory,skills}
-cd ~/.openclaw/workspace
-```
+**Survivable context.** Restart the machine. The crew remembers everything. The knowledge compounds.
 
-### Prompt 2: Create Workspace Files
+## The Pattern
 
-Create SOUL.md, AGENTS.md, IDENTITY.md, USER.md, HEARTBEAT.md, and MEMORY.md using the templates above.
+If you want to build something like this, here's the pattern:
 
-### Prompt 3: Set Up Crew Router
+1. **Start with memory.** Files that survive restarts. Daily logs. Curated learnings. Everything else follows.
 
-```javascript
-// ~/.openclaw/scripts/crew_router.js
-// Copy the CREW_MODELS and TASK_PATTERNS from above
-// Add classifyTask() and selectCrew() functions
-```
+2. **Separate concerns.** Don't build one agent. Build a crew. Each with a specialty. Each with constraints. Each with a voice.
 
-### Prompt 4: Create spawn-task.js
+3. **Delegate, never do.** The orchestrator coordinates. The crew executes. This separation is non-negotiable.
 
-```javascript
-// ~/.openclaw/crew/spawn-task.js
-// Key functions:
-// - sanitizeForShell() for security
-// - createDashboardTask() to register task
-// - spawnAgent() to launch sub-agent
-// - linkSessionToTask() for tracking
-```
+4. **Automate proactively.** Heartbeats. Watchdogs. Self-healing. The system should run itself and only escalate when it matters.
 
-### Prompt 5: Set Up Inter-Agent Messaging
+5. **Require evidence.** No "I think it's done." Run the command. Read the output. Verify it works.
 
-```bash
-# Create inbox directories for each agent
-mkdir -p ~/.openclaw/crew/{geordi,spock,quark,data}/memory
+Six months ago, I had a collection of AI assistants that couldn't talk to each other. Now I have a crew that runs my operations while I sleep.
 
-# Copy crew_msg.js to scripts
-cp /path/to/crew_msg.js ~/.openclaw/scripts/
-```
-
-### Prompt 6: Configure Heartbeat
-
-```javascript
-// ~/.openclaw/crew/heartbeat.js
-const HEARTBEAT_CONFIG = {
-  intervalMs: 30 * 60 * 1000,  // 30 minutes
-  checks: ['email', 'health', 'tasks', 'memory']
-};
-
-async function runHeartbeat() {
-  await checkpointContext();
-  await checkEmail();
-  await runHealthChecks();
-  await reviewPendingTasks();
-  await maintainMemory();
-}
-```
-
-### Prompt 7: Initialize Git and Create First Commit
-
-```bash
-git init
-git add .
-git commit -m "feat: Initialize Seven of Nine AI Chief of Staff"
-
-# Create private repo under your org
-gh repo create seven-of-nine --private --source=. --push
-```
-
-## What This System Actually Does
-
-After running this system for several weeks, here's what I've observed:
-
-**Parallel Work:** Multiple agents work simultaneously. While Geordi is fixing a dashboard bug, Spock is researching API changes, and Quark is analyzing market data. No single agent bottleneck.
-
-**Autonomous Escalation:** Agents know when to ask for help. A coding task might spawn a security review request to Tuvok, a performance check to Icheb, and a final QC to Data—without Seven manually coordinating each step.
-
-**Persistent Memory:** Context survives restarts. The system remembers what it learned yesterday because memory files are written to disk, not kept in context.
-
-**Proactive Operations:** The heartbeat runs every 30 minutes, checking emails, system health, and pending tasks. I wake up to summaries of what shipped overnight.
-
-**Quality Gates:** Nothing reaches "done" without peer review. The QC system catches bugs before they compound.
-
-## The Real Insight
-
-The most valuable thing I learned building this system isn't technical. It's this:
-
-**AI agents aren't people, but they need people-style structure.**
-
-A single AI agent is like a brilliant employee with no context, no team, and no process. It can do amazing work in isolation, but it can't scale, it can't collaborate, and it needs constant supervision.
-
-A crew system is like an organization. It has:
-- Defined roles and specialties
-- Communication protocols
-- Escalation paths
-- Quality controls
-- Shared memory
-
-The individual agents are less capable than a single "super agent" would be. But the crew as a whole is far more effective because it operates like a real team.
-
-That's what Seven of Nine is: not a smarter agent, but a functioning organization of agents. And that's why it actually works.
+The difference wasn't better prompts. It was better architecture.
 
 ---
 
-*Want to build something similar? Start with the workspace structure, add the crew router, and configure one automation at a time. The system evolves organically—just like a real organization.*
+*Want to build your own crew? The complete setup is in my workspace files—SOUL.md, AGENTS.md, MEMORY.md, HEARTBEAT.md, and the crew routing system at ~/.openclaw/crew/. Start with memory, add agents, enforce delegation, and automate everything that can run itself.*
