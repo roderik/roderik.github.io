@@ -1,0 +1,25 @@
+src/content/blog/remote-ai-development-stack.md
+  3e6352ba7bae9a4f 1-141
+src/content/blog/remote-ai-dev-stack-install-spec.md
+  3e6352ba7bae9a4f 1-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.17",
+  "base_commit_sha": "cdce1f7265d7cc911e81328193e36f1968a54d9e",
+  "prompts": {
+    "3e6352ba7bae9a4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a58b323-990b-4a11-bf79-580b76ee54da",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Roderik van der Veer <roderik@settlemint.com>",
+      "messages": [],
+      "total_additions": 1102,
+      "total_deletions": 756,
+      "accepted_lines": 346,
+      "overriden_lines": 0
+    }
+  }
+}
