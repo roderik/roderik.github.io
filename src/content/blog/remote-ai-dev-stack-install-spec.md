@@ -25,7 +25,7 @@ brew install fish git gh lazygit rtk worktrunk yadm fzf zoxide bat eza ripgrep s
 
 - **fish** — shell
 - **lazygit** — git TUI (runs in the right pane)
-- **[rtk](https://github.com/reachingforthejack/rtk)** — token optimizer for Claude Code
+- **[rtk](https://github.com/rtk-ai/rtk)** — token optimizer for Claude Code
 - **[worktrunk](https://github.com/max-sixty/worktrunk)** — git worktree manager with cmux integration
 - **[linear](https://github.com/schpet/linear-cli)** — Linear CLI for ticket fetching (used by `wtn`)
 - **yadm** — dotfile manager

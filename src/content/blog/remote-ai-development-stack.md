@@ -51,7 +51,7 @@ I have about 60 skills installed. Most are marketing and design related (I use t
 
 Here's something that isn't obvious until you try running agents for hours: context fills up fast. Every shell command output, every file read, every tool result eats into the context window. Once it's full, Claude Code compacts the conversation—summarizes everything and drops the details. After compaction, the agent gets dumber. It forgets constraints, misses requirements, repeats mistakes it already fixed.
 
-[**RTK**](https://github.com/reachingforthejack/rtk) (Rust Token Killer) intercepts every shell command Claude Code runs and strips the output. A `git status` that returns 200 lines gets compressed to the 15 that matter. It's installed via homebrew and works transparently through hooks. I can check the actual numbers with `rtk gain`:
+[**RTK**](https://github.com/rtk-ai/rtk) (Rust Token Killer) intercepts every shell command Claude Code runs and strips the output. A `git status` that returns 200 lines gets compressed to the 15 that matter. It's installed via homebrew and works transparently through hooks. I can check the actual numbers with `rtk gain`:
 
 ![RTK token savings — 21.3M tokens saved at 67.8% efficiency across 6628 commands.](/blog-images/rtk-gain.png)
 
@@ -119,7 +119,7 @@ If you want to try any of this:
 - **[cmux](https://cmux.dev)** — terminal multiplexer with socket API
 - **[OpenClaw](https://openclaw.ai)** — AI gateway, skills runtime, and CLI
 - **[My dotfiles](https://github.com/roderik/dotfiles-2026/tree/main)** — fish config, cmux functions, wt wrappers, Brewfile
-- **[RTK](https://github.com/reachingforthejack/rtk)** — Rust Token Killer, keeps context clean
+- **[RTK](https://github.com/rtk-ai/rtk)** — Rust Token Killer, keeps context clean
 - **[context-mode](https://github.com/mksglu/context-mode)** — context window virtualization via FTS5
 - **[claude-hud](https://github.com/jarrodwatts/claude-hud)** — status line for context usage and agent progress
 - **[Plannotator](https://github.com/backnotprop/plannotator)** — annotation UI for plans and code review
