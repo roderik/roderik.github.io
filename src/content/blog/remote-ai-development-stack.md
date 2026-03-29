@@ -1,20 +1,20 @@
 ---
-title: 'My AI Dev Setup: cmux, OpenClaw, Skills, and a Lot of Fish'
-description: 'A walkthrough of the toolchain I cobbled together so my AI agents keep working when I step away from my desk—and I can follow up from my phone.'
+title: 'How I Stopped Babysitting Claude Code'
+description: 'The terminal multiplexer, fish functions, context tools, and agent skills I ended up building so AI work could keep running while I wasn''t watching.'
 pubDate: 2026-03-22
 tags: ['ai', 'engineering', 'tooling', 'agents', 'remote']
 heroImage: '/blog-images/cmux-workspace.png'
 ---
 
-I've been using Claude Code as my primary development tool at SettleMint for a while now. At some point I stopped thinking about it as "an AI assistant" and started treating it as infrastructure—something that should be running, managed, and observable the same way I think about any other service.
+I've been using Claude Code as my primary development tool at SettleMint for a while now. At some point I stopped thinking about it as "an AI assistant" and started treating it as infrastructure — something that should be running, managed, and observable the same way I think about any other service.
 
-This post is a walkthrough of what I ended up building to make that work. It's not a product. It's a stack of tools, shell scripts, and markdown files held together by convention. Here's how it fits together.
+This is a walkthrough of what I ended up building. It's not a product. It's a stack of tools, shell scripts, and markdown files held together by convention.
 
-## The problem
+## The thing that was annoying
 
-Claude Code is great, but it's a single terminal session. You're sitting there, watching it work, and if you close the lid it's gone. I have a dozen active repos. I wanted agents working on things in parallel, across projects, without me staring at each one. I also wanted to go from a vague idea to shipped code with as few manual handoffs as possible.
+Claude Code is great, but it's a single terminal session. You're sitting there watching it work, and if you close the lid it's gone. I have a dozen active repos. I wanted agents running in parallel across projects without me staring at each one. I also wanted to go from a vague idea to shipped code with as few manual handoffs as possible.
 
-There's no off-the-shelf product that does this. So I glued things together.
+There's no off-the-shelf product that does this cleanly. So I glued things together.
 
 ## cmux
 
@@ -37,9 +37,9 @@ The [fish config](https://github.com/roderik/dotfiles-2026/blob/main/.config/fis
 
 ## ACP: managing agents remotely
 
-The `wtn` function doesn't just launch Claude Code—it launches it through ACP (Agent Control Protocol). ACP lets [OpenClaw](https://openclaw.ai) manage and steer running agent sessions. I can check on an agent's progress, redirect its focus, or ask for a status update—without needing to be in the terminal where it's running.
+The `wtn` function doesn't just launch Claude Code — it launches it through ACP (Agent Control Protocol). ACP lets [OpenClaw](https://openclaw.ai) manage and steer running agent sessions. I can check on an agent's progress, redirect its focus, or ask for a status update without needing to be in the terminal where it's running.
 
-This is the piece that makes the whole setup actually remote. Without ACP, I'd need to be in front of the specific cmux pane. With it, `wtn PRD-1234` is genuinely fire-and-forget—OpenClaw keeps track of the session and I can steer it from wherever.
+Without ACP, I'd need to be in front of the specific cmux pane to do anything. With it, `wtn PRD-1234` is genuinely fire-and-forget — OpenClaw keeps track of the session and I can steer it from wherever I am.
 
 ## OpenClaw
 
@@ -47,9 +47,9 @@ This is the piece that makes the whole setup actually remote. Without ACP, I'd n
 
 I have about 60 skills installed. Most are marketing and design related (I use the [Impeccable](https://github.com/pbakaus/impeccable) plugin for UI work). The development-critical ones live in the project repo itself under `.agents/skills/`.
 
-## Context is the bottleneck
+## Context is the actual bottleneck
 
-Here's something that isn't obvious until you try running agents for hours: context fills up fast. Every shell command output, every file read, every tool result eats into the context window. Once it's full, Claude Code compacts the conversation—summarizes everything and drops the details. After compaction, the agent gets dumber. It forgets constraints, misses requirements, repeats mistakes it already fixed.
+Something I didn't understand until I tried running agents for hours: context fills up fast. Every shell command output, every file read, every tool result eats into the context window. Once it's full, Claude Code compacts the conversation — summarizes everything and drops the details. After compaction, the agent gets noticeably worse. It forgets constraints, misses requirements, repeats mistakes it already fixed.
 
 [**RTK**](https://github.com/rtk-ai/rtk) (Rust Token Killer) intercepts every shell command Claude Code runs and strips the output. A `git status` that returns 200 lines gets compressed to the 15 that matter. It's installed via homebrew and works transparently through hooks. I can check the actual numbers with `rtk gain`:
 
@@ -61,7 +61,7 @@ I also run [**claude-hud**](https://github.com/jarrodwatts/claude-hud) for a sta
 
 ![claude-hud status line — Opus 4.6 at 59% context, active tools, and current task.](/blog-images/claude-hud.png)
 
-The important number is the context percentage. Once it gets too high, Claude Code compacts the conversation and the agent loses nuance. The whole point of RTK and context-mode is to stay in the smart range for as long as possible—not about saving money (I use Max and Pro accounts), but about keeping the agent sharp.
+The important number is the context percentage. Once it gets too high, compaction happens and the agent loses nuance. The whole point of RTK and context-mode is to stay in the sharp range as long as possible — it's not about saving money (I use Max and Pro accounts), it's about not having the agent forget what it was doing.
 
 [**fff**](https://github.com/fff-tools/fff) rounds out the context toolkit with fast file search that ranks results by how recently and frequently I've used them, and boosts git-dirty files.
 
@@ -106,11 +106,13 @@ Linear ticket to merged PR. I still check in a few times during a run, but the i
 
 ## What the day looks like now
 
-I check Linear in the morning, launch agents on the priority tickets with `wtn`, and shepherd picks up PRs from overnight work. Most of my time goes to architecture decisions, reviewing plans in Plannotator, and working on problems agents can't handle—novel integrations, ambiguous requirements, anything that needs a conversation with another human. When I'm away from my desk, I use OpenClaw via ACP to steer agents, and the Telegram plugin gives me status updates on my phone.
+Morning: check Linear, launch agents on priority tickets with `wtn`, shepherd picks up PRs from overnight. Most of my active time goes to architecture decisions, reviewing plans in Plannotator, and working on problems agents genuinely can't handle — novel integrations, anything ambiguous, anything that needs a conversation with another human.
 
-Sometimes I start with `/brainstorm` to flesh out a new idea, let it produce the tickets, then `/execute` picks them up. The gap between "what if we..." and "it's in review" keeps shrinking.
+When I'm away from my desk, OpenClaw via ACP lets me steer agents from my phone. Telegram gives me status updates when something finishes or gets stuck.
 
-Less writing code, more designing systems that write code. It took some adjusting.
+Sometimes I start with `/brainstorm` to flesh out a new idea, let it produce the tickets, then `/execute` picks them up. The gap between "what if we..." and "it's in review" keeps getting shorter. I'm not sure how short it can get.
+
+Less writing code, more thinking about what to build. It took some adjusting. I'm still adjusting.
 
 ## The pieces
 
@@ -138,4 +140,4 @@ The companion [installation spec](/blog/remote-ai-dev-stack-install-spec) has th
 
 ---
 
-*I'm building [DALP](https://settlemint.com) (Digital Asset Lifecycle Platform) with this stack. More of the skill system and agent workflows at [github.com/settlemint/agent-marketplace](https://github.com/settlemint/agent-marketplace).*
+*I'm building [DALP](https://settlemint.com) (Digital Asset Lifecycle Platform) with this stack. The skill system and agent workflows are at [github.com/settlemint/agent-marketplace](https://github.com/settlemint/agent-marketplace).*
