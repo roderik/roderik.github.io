@@ -2,7 +2,7 @@
 title: 'From AI code to merged PR: closing the last mile'
 description: 'AI coding agents are good at writing code and opening PRs. The part nobody talks about: what happens after. bellwether closes that loop.'
 pubDate: 2026-03-29
-heroImage: /blog-images/flock-hero.png
+heroImage: /blog-images/bellwether-hero.jpg
 tags: ['ai', 'agents', 'tooling', 'github', 'bellwether']
 ---
 
