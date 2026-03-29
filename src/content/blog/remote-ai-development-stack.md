@@ -24,6 +24,8 @@ Everything is controllable over the socket: create workspaces, split panes, send
 
 ## The fish functions
 
+> **Update:** These functions are now packaged as [flock](https://github.com/roderik/flock), a fisher plugin. `fisher install roderik/flock` installs everything described in this section. [Read the announcement.](/blog/flock-fish-worktree-plugin)
+
 The actual entry point to my workflow is a [63-line fish function](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/functions/__wt_cmux_setup.fish) called `__wt_cmux_setup`. When [worktrunk](https://github.com/max-sixty/worktrunk) (my git worktree manager) drops me into a project directory, this fires automatically. It detects the cmux workspace, reads the pane topology, creates a right split with lazygit, a bottom split for a spare terminal, resizes everything to sensible proportions, and launches Claude Code or Codex in the main pane. It's idempotent—if the layout already exists, it skips. Every project gets the same three-pane setup without me touching anything.
 
 On top of that, I have [wrapper functions](https://github.com/roderik/dotfiles-2026/tree/main/.config/fish/functions) that tie worktrees, cmux, and agents together:
