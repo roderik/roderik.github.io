@@ -40,7 +40,7 @@ The agent is capable of handling this loop autonomously — it just doesn't have
 bellwether is a TypeScript CLI that reads your PR's current state and returns it in a structured, token-efficient format:
 
 ```bash
-npx -y bellwether@latest check --watch
+npx -y bellwether@latest check --watch true
 ```
 
 Output:
@@ -115,10 +115,10 @@ bellwether surfaces unresolved review comments with file and line context. You c
 
 ```bash
 # Show unresolved comments
-npx -y bellwether@latest check --unresolved
+npx -y bellwether@latest check --unresolved true
 
 # Reply to comment 456 and mark it resolved
-npx -y bellwether@latest check --reply "456:Fixed in abc1234" --resolve
+npx -y bellwether@latest check --reply "456:Fixed in abc1234" --resolve true
 ```
 
 For agents, this means the full review cycle — read comment, understand context, fix code, reply, resolve — can happen without a human touching GitHub.
@@ -127,25 +127,25 @@ For agents, this means the full review cycle — read comment, understand contex
 
 ## Installing as a Claude Code skill
 
-bellwether ships as a Claude Code skill. One command installs it into your local Claude Code context:
-
-```bash
-npx -y bellwether@latest skills add
-```
-
-Once installed, Claude Code knows the full bellwether loop: watch CI → fix failures → address reviews → push → repeat until `pr.ready = true`. It's available on the [Claude Code marketplace](https://github.com/roderik/bellwether/blob/main/marketplace.json) as well.
+bellwether ships as a Claude Code plugin. Install it from the [Claude Code marketplace](https://github.com/roderik/bellwether/blob/main/marketplace.json) and Claude Code gets the full bellwether loop: watch CI → fix failures → address reviews → push → repeat until `pr.ready = true`.
 
 The dual-mode design (CLI for humans, skill for agents) means the same tool works in both contexts. You're not maintaining two separate integrations.
 
 ## Hooks: zero-friction PR feedback
 
-Once you've installed the skill, bellwether adds Claude Code hooks that trigger automatically after common git operations:
+bellwether ships PostToolUse hooks that trigger automatically after common git operations. Install them with:
+
+```bash
+npx -y bellwether@latest hooks add
+```
+
+This writes into your `~/.claude/settings.json` (and `~/.codex/hooks.json` if you use Codex). After that:
 
 - **After `git push`** — immediately checks CI and review state on your PR
 - **After `gh pr create`** — checks the new PR's initial state
 - **After `gh pr ready`** — confirms it's actually ready before you notify reviewers
 
-The hook runs `npx -y bellwether@latest hook-check --format json` and feeds the result back into Claude Code's context. Your agent doesn't need to remember to check — it happens automatically every time you push.
+The hook runs `npx -y bellwether@latest hooks check --format json` and feeds the result back into Claude Code's context. Your agent doesn't need to remember to check — it happens automatically every time you push.
 
 This is the part that makes the loop feel tight. No manual `check --watch` invocation between pushes. Push → CI state appears → agent decides what to do next.
 
@@ -153,7 +153,7 @@ This is the part that makes the loop feel tight. No manual `check --watch` invoc
 
 ## Where it's headed
 
-bellwether is early — v0.0.6, a few days old. The core watch loop works. What's next:
+bellwether is early — v0.0.7, a few days old. The core watch loop works. What's next:
 
 - **Auto-merge on ready**: once `pr.ready = true`, optionally trigger merge
 - **Multi-PR mode**: watch several PRs at once, surface only the ones that need attention
