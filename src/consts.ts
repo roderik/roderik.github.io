@@ -2,6 +2,8 @@
 export const SITE_TITLE = 'Roderik van der Veer';
 export const SITE_DESCRIPTION = 'Co-founder & CTO thoughts on blockchain, AI, and building products.';
 export const SITE_URL = 'https://vanderveer.be';
+export const HOME_INTRO =
+  "I'm the co-founder & CTO at SettleMint, writing about blockchain, AI, and building products.";
 
 export const AUTHOR = {
   name: 'Roderik van der Veer',
