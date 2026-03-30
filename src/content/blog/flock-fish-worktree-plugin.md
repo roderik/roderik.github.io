@@ -2,7 +2,7 @@
 title: 'flock: my worktree functions, now a fisher plugin'
 description: 'The fish functions from my AI dev setup are now a proper, installable fisher plugin. One command to create a worktree, set up a layout, and launch an agent.'
 pubDate: 2026-03-29
-heroImage: /blog-images/flock-hero.png
+heroImage: /blog-images/flock-hero.jpg
 tags: ['ai', 'fish', 'tooling', 'open-source', 'worktrees']
 ---
 
