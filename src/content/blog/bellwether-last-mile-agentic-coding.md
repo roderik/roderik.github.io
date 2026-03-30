@@ -40,7 +40,7 @@ The agent is capable of handling this loop autonomously — it just doesn't have
 bellwether is a TypeScript CLI that reads your PR's current state and returns it in a structured, token-efficient format:
 
 ```bash
-npx -y bellwether@latest check --watch
+npx -y bellwether@latest check --watch true
 ```
 
 Output:
@@ -115,10 +115,10 @@ bellwether surfaces unresolved review comments with file and line context. You c
 
 ```bash
 # Show unresolved comments
-npx -y bellwether@latest check --unresolved
+npx -y bellwether@latest check --unresolved true
 
 # Reply to comment 456 and mark it resolved
-npx -y bellwether@latest check --reply "456:Fixed in abc1234" --resolve
+npx -y bellwether@latest check --reply "456:Fixed in abc1234" --resolve true
 ```
 
 For agents, this means the full review cycle — read comment, understand context, fix code, reply, resolve — can happen without a human touching GitHub.
@@ -136,7 +136,7 @@ The dual-mode design (CLI for humans, skill for agents) means the same tool work
 bellwether ships PostToolUse hooks that trigger automatically after common git operations. Install them with:
 
 ```bash
-npx -y bellwether@latest hook-add
+npx -y bellwether@latest hooks add
 ```
 
 This writes into your `~/.claude/settings.json` (and `~/.codex/hooks.json` if you use Codex). After that:
@@ -145,7 +145,7 @@ This writes into your `~/.claude/settings.json` (and `~/.codex/hooks.json` if yo
 - **After `gh pr create`** — checks the new PR's initial state
 - **After `gh pr ready`** — confirms it's actually ready before you notify reviewers
 
-The hook runs `npx -y bellwether@latest hook-check --format json` and feeds the result back into Claude Code's context. Your agent doesn't need to remember to check — it happens automatically every time you push.
+The hook runs `npx -y bellwether@latest hooks check --format json` and feeds the result back into Claude Code's context. Your agent doesn't need to remember to check — it happens automatically every time you push.
 
 This is the part that makes the loop feel tight. No manual `check --watch` invocation between pushes. Push → CI state appears → agent decides what to do next.
 
@@ -153,7 +153,7 @@ This is the part that makes the loop feel tight. No manual `check --watch` invoc
 
 ## Where it's headed
 
-bellwether is early — v0.0.6, a few days old. The core watch loop works. What's next:
+bellwether is early — v0.0.7, a few days old. The core watch loop works. What's next:
 
 - **Auto-merge on ready**: once `pr.ready = true`, optionally trigger merge
 - **Multi-PR mode**: watch several PRs at once, surface only the ones that need attention
