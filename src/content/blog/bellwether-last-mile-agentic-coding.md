@@ -131,6 +131,8 @@ bellwether ships as a Claude Code plugin. Install it from the [Claude Code marke
 
 The dual-mode design (CLI for humans, skill for agents) means the same tool works in both contexts. You're not maintaining two separate integrations.
 
+---
+
 ## Hooks: zero-friction PR feedback
 
 bellwether ships PostToolUse hooks that trigger automatically after common git operations. Install them with:
@@ -159,7 +161,7 @@ bellwether is early — v0.0.7, a few days old. The core watch loop works. What'
 - **Multi-PR mode**: watch several PRs at once, surface only the ones that need attention
 - **Better log filtering**: smarter signal extraction from more CI providers
 
-If you're working on agentic coding workflows and hitting the same last-mile friction, I'd genuinely like to know what your setup looks like. Issues and PRs welcome.
+If you're hitting the same last-mile friction, open an issue — I'd like to hear what your setup looks like.
 
 ---
 
