@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import { getCollection } from 'astro:content';
-import { AUTHOR, SITE_DESCRIPTION } from '../consts';
+import { AUTHOR, HOME_INTRO } from '../consts';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -13,8 +13,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   <div class="container">
     <section class="intro">
       <h1>Hi, I'm {AUTHOR.name.split(' ')[0]}</h1>
-      <p class="tagline">{SITE_DESCRIPTION}</p>
-      <p class="bio">{AUTHOR.bio}</p>
+      <p class="tagline">{HOME_INTRO}</p>
     </section>
 
     <section class="recent-posts">
@@ -47,11 +46,6 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .tagline {
     font-size: 1.25rem;
     color: var(--color-text-muted);
-    margin-bottom: 1rem;
-  }
-
-  .bio {
-    color: var(--color-text-light);
     margin-bottom: 0;
   }
 
