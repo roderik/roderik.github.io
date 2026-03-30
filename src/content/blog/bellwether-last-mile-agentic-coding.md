@@ -31,7 +31,21 @@ Here's the typical flow when an AI agent opens a PR:
 
 Each step is a context switch. Each "copy error from GitHub, paste to agent" is manual plumbing that shouldn't exist.
 
-The agent is capable of handling this loop autonomously — it just doesn't have clean access to the state it needs.
+The agent is capable of handling this loop — technically. But "capable" and "reliable over a long session" are different things.
+
+---
+
+## Why not just tell the agent to do it?
+
+The obvious question: if the agent can write code, why can't it just run `gh pr checks`, parse the output, and fix whatever failed?
+
+It can. I've done this. It works — sometimes.
+
+The problem is token efficiency. The GitHub API returns verbose JSON. A single check run log can be tens of thousands of lines. The agent has to ingest all of that to find the three lines that actually matter. In a fresh session with a full context window, it usually manages. Three hours into a development session with a loaded context? It starts missing things, hallucinating fixes for the wrong error, or getting confused by the noise.
+
+I noticed a pattern: the longer the session ran, the worse the agent got at this specific task. Not because the task got harder, but because parsing raw CI output is expensive and the context window was filling up with noise from previous iterations. Each failed attempt added more garbage to the context, making the next attempt less likely to succeed.
+
+It's the same problem in a different shape. The agent is capable, but the interface between "agent" and "PR state" is too noisy and too expensive for reliable long-running use. You need something that pre-filters the signal and returns structured, minimal output — so the agent spends tokens on fixing the problem, not on finding it.
 
 ---
 
