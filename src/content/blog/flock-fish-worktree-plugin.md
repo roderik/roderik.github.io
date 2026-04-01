@@ -18,7 +18,9 @@ fisher install roderik/flock
 
 ## What you get
 
-flock wraps the full git worktree lifecycle. Create a branch and worktree, set up your terminal layout, launch your agent, do your work, tear everything down when the PR merges.
+flock wraps the full git worktree lifecycle. Create a branch and worktree from a ticket number, set up your terminal layout with the right panes, launch your AI coding agent, do your work, tear everything down when the PR merges.
+
+![flock commands overview](/blog-images/flock-commands.png)
 
 ```fish
 flock new PRD-1234        # fetch ticket, create worktree, set up layout, launch agent
@@ -28,7 +30,7 @@ flock orchestrator         # jump to your main project directory
 
 Abbreviations ship with it — `fn` / `fd` / `fo` for the short versions, and `wtn` / `wtd` / `wto` as backward-compat aliases for anyone already on the dotfiles originals.
 
-If you're using zellij, a layout file ships with the plugin and gets symlinked on shell start. That's what gives you the three-pane setup — main editor pane, lazygit on the right, spare terminal below. If you're not using zellij, this layer is entirely inert.
+If you're using zellij, a layout file ships with the plugin and gets symlinked on shell start. That's what gives you the three-pane setup — main editor pane, lazygit on the right, spare terminal below. Not using zellij? This layer is entirely inert. The layout helpers are behind zellij checks, so nothing breaks.
 
 Required: `git`, `gh`, `fzf`, `worktrunk`. Optional: `zellij`, `lazygit`, `linear` CLI, `claude` or `codex`.
 
