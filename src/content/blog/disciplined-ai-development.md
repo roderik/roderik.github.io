@@ -1,6 +1,6 @@
 ---
 title: 'AI Exposes the Discipline You Already Had (or Didn''t)'
-description: 'After eighteen months of running AI agents on production code at SettleMint, the pattern is clear: the teams struggling aren''t failing because of the AI. The AI is just making their existing problems faster.'
+description: 'After eighteen months of running AI agents on production code at SettleMint, the pattern is clear: the teams struggling aren''t failing because of the AI. The AI is just amplifying the problems they already had.'
 pubDate: 2026-01-20
 tags: ['ai', 'engineering', 'leadership', 'agents']
 ---
@@ -51,7 +51,7 @@ It sounds paranoid. It's caught real bugs often enough that I still do it.
 
 The pattern I use: identify the command that would prove the claim, run it fresh, read the full output. Not "I believe the tests pass" but "I ran `npm test` and here's the output showing green."
 
-## The part I didn't expect
+## More structure, more speed
 
 Adding structure to AI development made it faster, not slower.
 

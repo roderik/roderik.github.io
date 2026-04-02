@@ -6,7 +6,7 @@ tags: ['ai', 'engineering', 'tooling', 'agents', 'remote']
 heroImage: '/blog-images/cmux-workspace.png'
 ---
 
-I've been using Claude Code as my primary development tool at SettleMint for a while now. At some point I stopped thinking about it as "an AI assistant" and started treating it as infrastructure — something that should be running, managed, and observable the same way I think about any other service.
+I've been using Claude Code as my primary development tool at SettleMint for over a year. At some point I stopped thinking about it as "an AI assistant" and started treating it as infrastructure — something that should be running, managed, and observable the same way I'd think about any other service.
 
 This is a walkthrough of what I ended up building. It's not a product. It's a stack of tools, shell scripts, and markdown files held together by convention.
 
@@ -18,7 +18,7 @@ There's no off-the-shelf product that does this cleanly. So I glued things toget
 
 ## cmux
 
-The terminal layer is [cmux](https://cmux.dev). It's built on libghostty and works like tmux—splits, panes, workspaces—but with a Unix socket API you can script against. The thing that matters for me: each workspace shows notification rings when an agent needs attention. I can have ten workspaces running agents and only look at the ones that ping me.
+The terminal layer is [cmux](https://cmux.dev). It's built on libghostty and works like tmux — splits, panes, workspaces — but with a Unix socket API you can script against. The thing that matters for me: each workspace shows notification rings when an agent needs attention. I can have ten workspaces running agents and only look at the ones that ping me.
 
 Everything is controllable over the socket: create workspaces, split panes, send keystrokes, rename tabs, resize. Which brings me to the glue.
 
@@ -26,7 +26,7 @@ Everything is controllable over the socket: create workspaces, split panes, send
 
 > **Update:** These functions are now packaged as [flock](https://github.com/roderik/flock), a fisher plugin. `fisher install roderik/flock` installs everything described in this section. [Read the announcement.](/blog/flock-fish-worktree-plugin)
 
-The actual entry point to my workflow is a [63-line fish function](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/functions/__wt_cmux_setup.fish) called `__wt_cmux_setup`. When [worktrunk](https://github.com/max-sixty/worktrunk) (my git worktree manager) drops me into a project directory, this fires automatically. It detects the cmux workspace, reads the pane topology, creates a right split with lazygit, a bottom split for a spare terminal, resizes everything to sensible proportions, and launches Claude Code or Codex in the main pane. It's idempotent—if the layout already exists, it skips. Every project gets the same three-pane setup without me touching anything.
+The actual entry point to my workflow is a [63-line fish function](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/functions/__wt_cmux_setup.fish) called `__wt_cmux_setup`. When [worktrunk](https://github.com/max-sixty/worktrunk) (my git worktree manager) drops me into a project directory, this fires automatically. It detects the cmux workspace, reads the pane topology, creates a right split with lazygit, a bottom split for a spare terminal, resizes everything to sensible proportions, and launches Claude Code or Codex in the main pane. It's idempotent — if the layout already exists, it skips. Every project gets the same three-pane setup without me touching anything.
 
 On top of that, I have [wrapper functions](https://github.com/roderik/dotfiles-2026/tree/main/.config/fish/functions) that tie worktrees, cmux, and agents together:
 
@@ -35,7 +35,7 @@ On top of that, I have [wrapper functions](https://github.com/roderik/dotfiles-2
 - [`wtc my-feature`](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/functions/wtc.fish) — creates a plain worktree with a branch name and sets up cmux.
 - [`wtr`](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/functions/wtr.fish) — removes the current worktree, cleans up the branch, prunes the remote, and closes the cmux workspace.
 
-The [fish config](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/config.fish) also has abbreviations—`c` expands to `claude --dangerously-skip-permissions`, `lg` to `lazygit`, `ct` to `cmux claude-teams --dangerously-skip-permissions`. The full shell setup is in my [dotfiles repo](https://github.com/roderik/dotfiles-2026/tree/main).
+The [fish config](https://github.com/roderik/dotfiles-2026/blob/main/.config/fish/config.fish) also has abbreviations — `c` expands to `claude --dangerously-skip-permissions`, `lg` to `lazygit`, `ct` to `cmux claude-teams --dangerously-skip-permissions`. The full shell setup is in my [dotfiles repo](https://github.com/roderik/dotfiles-2026/tree/main).
 
 ## ACP: managing agents remotely
 
@@ -45,7 +45,7 @@ Without ACP, I'd need to be in front of the specific cmux pane to do anything. W
 
 ## OpenClaw
 
-[OpenClaw](https://openclaw.ai) is both a CLI and a macOS app. The app runs as a daemon—starts on boot, stays alive, connects to model providers through a local gateway. The CLI (`openclaw`) handles onboarding, skill management, and configuration. What it gives me is the skills directory at `~/.agents/skills/`. Skills are markdown files with structured prompts. Having them at the system level means they're available in every project without duplicating anything.
+[OpenClaw](https://openclaw.ai) is both a CLI and a macOS app. The app runs as a daemon — starts on boot, stays alive, connects to model providers through a local gateway. The CLI (`openclaw`) handles onboarding, skill management, and configuration. What it gives me is the skills directory at `~/.agents/skills/`. Skills are markdown files with structured prompts. Having them at the system level means they're available in every project without duplicating anything.
 
 I have about 60 skills installed. Most are marketing and design related (I use the [Impeccable](https://github.com/pbakaus/impeccable) plugin for UI work). The development-critical ones live in the project repo itself under `.agents/skills/`.
 
@@ -71,34 +71,34 @@ The important number is the context percentage. Once it gets too high, compactio
 
 Before any code gets written, I often start with [`/brainstorm`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/brainstorm). It's an orchestration skill that takes a project idea and turns it into a structured PRD in Linear, then optionally breaks it down into implementation tickets.
 
-The flow: I describe what I want to build, it asks clarifying questions (target users, constraints, scope), then delegates to a [`prd-builder`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/prd-builder) sub-skill that drafts a six-section PRD through a back-and-forth. The PRD gets stored directly in Linear's project `content` field—Linear is the source of truth, not local files.
+The flow: I describe what I want to build, it asks clarifying questions (target users, constraints, scope), then delegates to a [`prd-builder`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/prd-builder) sub-skill that drafts a six-section PRD through a back-and-forth. The PRD gets stored directly in Linear's project `content` field — Linear is the source of truth, not local files.
 
 Once the PRD is approved, a [`task-builder`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/task-builder) sub-skill decomposes it into milestones and detailed tickets with descriptions, estimates, and dependencies. It can run autonomously (auto-approves drafts, picks sensible defaults) or interactively.
 
-The output is a Linear project with everything filled in—lead, dates, initiative—and a set of tickets ready for agents to pick up. It's the bridge between "I have an idea" and "an agent is working on it."
+The output is a Linear project with everything filled in — lead, dates, initiative — and a set of tickets ready for agents to pick up. It's the bridge between "I have an idea" and "an agent is working on it."
 
 ## Shepherd: the PR babysitter
 
 This is the skill that changed how I work. [`/shepherd`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/shepherd) is a convergence loop that manages a pull request until it's merge-ready:
 
-1. Fetches all review comments—from bots and humans
+1. Fetches all review comments — from bots and humans
 2. Evaluates each one: fix it, or dismiss with reasoning
 3. Implements fixes with TDD, commits, pushes, replies to the comment
 4. Waits for review bots to finish reacting
 5. Checks CI, rebases if behind, resolves conflicts
 6. Loops back if anything changed
 
-It stops when: zero unanswered comments AND all bots done AND CI green AND PR is mergeable AND it didn't push any commits in the last iteration. That last condition matters—if shepherd just pushed a fix, CI needs to run again, so it waits.
+It stops when: zero unanswered comments AND all bots done AND CI green AND PR is mergeable AND it didn't push any commits in the last iteration. That last condition matters — if shepherd just pushed a fix, CI needs to run again, so it waits.
 
 ![Shepherd reporting a PR status via Telegram — all CI passing, review comments resolved, ready to merge.](/blog-images/shepherd-telegram.png)
 
-For review resolution, shepherd uses [agent-reviews](https://github.com/pbakaus/agent-reviews)—a tool that fetches and resolves PR review comments from bots like Copilot, Cursor Bugbot, cubic, and Baz Reviewer. It works in two phases: a synchronous sweep of all current findings, then a polling loop that watches for new comments as bots react to fixes. It stops when the watcher reports quiet for five minutes. There's a separate mode for human reviewer feedback that distinguishes between change requests, questions, and suggestions.
+For review resolution, shepherd uses [agent-reviews](https://github.com/pbakaus/agent-reviews) — a tool that fetches and resolves PR review comments from bots like Copilot, Cursor Bugbot, cubic, and Baz Reviewer. It works in two phases: a synchronous sweep of all current findings, then a polling loop that watches for new comments as bots react to fixes. It stops when the watcher reports quiet for five minutes. There's a separate mode for human reviewer feedback that distinguishes between change requests, questions, and suggestions.
 
 ## The full pipeline
 
 Shepherd handles the PR endgame. The full flow starts with [`/execute`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/execute), which reads a Linear ticket and routes through:
 
-**Planning** — the [`planner`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/planner) does codebase research via semantic analysis and LSP, web research for unfamiliar patterns, then seven parallel reviewers tear the plan apart: feasibility, scope, security, architecture, devil's advocate, design, and interaction. Plans that don't survive get reworked. I review plans in [Plannotator](https://github.com/backnotprop/plannotator), which gives an annotation UI for agent-generated plans—I can comment on specific steps before the agent starts building.
+**Planning** — the [`planner`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/planner) does codebase research via semantic analysis and LSP, web research for unfamiliar patterns, then seven parallel reviewers tear the plan apart: feasibility, scope, security, architecture, devil's advocate, design, and interaction. Plans that don't survive get reworked. I review plans in [Plannotator](https://github.com/backnotprop/plannotator), which gives an annotation UI for agent-generated plans — I can comment on specific steps before the agent starts building.
 
 **Building** — strict [TDD](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/tdd). Each task gets fresh agent context to avoid pollution from previous work. A [`verifier`](https://github.com/roderik/roderik.github.io/tree/main/.agents/skills/verifier) skill runs completion checklists and the full CI tier before marking anything done.
 
